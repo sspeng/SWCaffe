@@ -24,7 +24,7 @@ SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm_float.o
 # uncomment if use swDNN
 FLAGS += -DUSE_SWDNN
 SWOBJ+=$(SWDNNOBJ)
-#FLAGS +=  -DUSE_SWPOOL
+FLAGS +=  -DUSE_SWPOOL
 
 BIN_DIR=./bin
 lenet: $(BIN_DIR)/test_lenet_sw
@@ -69,9 +69,15 @@ $(SWBUILD_DIR)/swlayers/sw_pool_layer_impl.o: ./src/swlayers/sw_pool_layer_impl.
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/swlayers/sw_slave_pool.o: ./src/swlayers/sw_slave_pool.c
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
+$(SWBUILD_DIR)/swlayers/sw_slave_pool_f.o: ./src/swlayers/sw_slave_pool_f.c
+	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
 
+	
 $(SWBUILD_DIR)/util/swmatrix_trans.o: ./src/util/swmatrix_trans.c
 	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/swmatrix_trans_f.o: ./src/util/swmatrix_trans_f.c
+	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+
 $(SWBUILD_DIR)/util/matrix_trans.o: ./src/util/matrix_trans.c
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/swlayers/sw_conv_layer_impl.o: ./src/swlayers/sw_conv_layer_impl.c

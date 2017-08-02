@@ -157,10 +157,15 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
 		
     // The main loop
 #ifdef USE_SWPOOL
-    if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0 &&
-				sizeof(Dtype) == sizeof(double))
+  if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0)				
 	{
-        pooling_forward_max(bottom[0]->num(),channels_,(double*)top_data,(const double*)bottom_data,(int*)mask,(double*)top_mask,bottom[0]->offset(0, 1),
+    //printf("Enter Pool Forward_cpu\n");
+    if(sizeof(Dtype) == sizeof(double))
+		   pooling_forward_max_d(bottom[0]->num(),channels_,(double*)top_data,(const double*)bottom_data,(int*)mask,(double*)top_mask,bottom[0]->offset(0, 1),
+				top[0]->offset(0, 1),top.size() - 1,pooled_height_, pooled_width_, stride_h_,
+				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
+		else
+			pooling_forward_max_f(bottom[0]->num(),channels_,(float*)top_data,(const float*)bottom_data,(int*)mask,(float*)top_mask,bottom[0]->offset(0, 1),
 				top[0]->offset(0, 1),top.size() - 1,pooled_height_, pooled_width_, stride_h_,
 				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
 	}
@@ -257,10 +262,14 @@ void PoolingLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
     //printf("AVG=num=%d channels_=%d pooled_height_=%d pooled_width_=%d stride_h_=%d stride_w_=%d pad_h_=%d pad_w_=%d kernel_h_=%d kernel_w_=%d height_=%d width_=%d top_offset=%d bottom_offset=%d\n",\
     //    bottom[0]->num(),channels_,pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_,top[0]->offset(0,1), bottom[0]->offset(0,1));
 #ifdef USE_SWPOOL
-    if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0 &&
-				sizeof(Dtype) == sizeof(double))
+  if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0)
 	{
-		pooling_forward_avg(bottom[0]->num(),channels_,(double*)top_data,(const double*)bottom_data,bottom[0]->offset(0, 1),
+		if(sizeof(Dtype) == sizeof(double))	
+		    pooling_forward_avg_d(bottom[0]->num(),channels_,(double*)top_data,(const double*)bottom_data,bottom[0]->offset(0, 1),
+				top[0]->offset(0, 1),pooled_height_, pooled_width_, stride_h_,
+				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
+		else
+			pooling_forward_avg_f(bottom[0]->num(),channels_,(float*)top_data,(const float*)bottom_data,bottom[0]->offset(0, 1),
 				top[0]->offset(0, 1),pooled_height_, pooled_width_, stride_h_,
 				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
 	}
@@ -363,12 +372,17 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       mask = max_idx_.cpu_data();
     }
 #ifdef USE_SWPOOL
-    if(pooling_judge_condition(top[0]->num(),channels_,pooled_height_, pooled_width_) >0 &&
-				sizeof(Dtype) == sizeof(double))
+  if(pooling_judge_condition(top[0]->num(),channels_,pooled_height_, pooled_width_) >0 )
 	{
-		pooling_backward_max(top[0]->num(),channels_,(const double*)top_diff,(double*)bottom_diff,(const int*)mask,(const double*)top_mask,
+		//printf("Enter Pool Backward_cpu\n");
+    if(	sizeof(Dtype) == sizeof(double))	
+		   pooling_backward_max_d(top[0]->num(),channels_,(const double*)top_diff,(double*)bottom_diff,(const int*)mask,(const double*)top_mask,
 				bottom[0]->offset(0, 1),top[0]->offset(0, 1),top.size() - 1,pooled_height_, pooled_width_, stride_h_,
-				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);	    
+				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);	 
+        else
+            pooling_backward_max_f(top[0]->num(),channels_,(const float*)top_diff,(float*)bottom_diff,(const int*)mask,(const float*)top_mask,
+				bottom[0]->offset(0, 1),top[0]->offset(0, 1),top.size() - 1,pooled_height_, pooled_width_, stride_h_,
+				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);				
 	}
 	else
 	{
@@ -423,10 +437,14 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   case PoolingParameter_PoolMethod_AVE:
     // The main loop 
 #ifdef USE_SWPOOL
-    if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0 &&
-				sizeof(Dtype) == sizeof(double))
+  if(pooling_judge_condition(bottom[0]->num(),channels_,pooled_height_, pooled_width_) >0)				
 	{
-		pooling_backward_avg(bottom[0]->num(),channels_,(const double*)top_diff,(double*)bottom_diff,bottom[0]->offset(0, 1),
+		if(sizeof(Dtype) == sizeof(double))
+		    pooling_backward_avg_d(bottom[0]->num(),channels_,(const double*)top_diff,(double*)bottom_diff,bottom[0]->offset(0, 1),
+				top[0]->offset(0, 1),pooled_height_, pooled_width_, stride_h_,
+				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
+		else
+			pooling_backward_avg_f(bottom[0]->num(),channels_,(const float*)top_diff,(float*)bottom_diff,bottom[0]->offset(0, 1),
 				top[0]->offset(0, 1),pooled_height_, pooled_width_, stride_h_,
 				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);
 	}

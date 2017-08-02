@@ -7,8 +7,8 @@
 
 
 __thread_local_fix dma_desc dmaget2,dmaput2;
-typedef double     Type;
-typedef doublev4   SIMDType;
+typedef float      Type;
+typedef floatv4    SIMDType;
 
 #define SWAPABCD2(in0,in1,in2,in3){\
 	SIMDType o0 = simd_vshff(in1,in0,68 );  \
@@ -24,7 +24,7 @@ inline void mb()
 {
     asm volatile("memb");
 }
-void swapBN(SlaveParam *pParam)
+void swapBN_f(SlaveParam_f *pParam)
 {
     const int nMaxBuffSize = 55296;//54KB 
 	const int nMaxSize = nMaxBuffSize/sizeof(Type);
@@ -194,7 +194,7 @@ void swapBN(SlaveParam *pParam)
 	ldm_free(pBuff,nMaxBuffSize);
 }
 
-void swapNBHW(SlaveParam *pParam)
+void swapNBHW_f(SlaveParam_f *pParam)
 {
     Type *pTmp,*pLocalIn,*pLocalOut;
 
@@ -337,7 +337,7 @@ void swapNBHW(SlaveParam *pParam)
 	ldm_free(pLocalOut,nSize);
 	//ldm_free(pTmp,2*sizeof(double));	
 }
-void swapNBHW_ROLL(SlaveParam *pParam)
+void swapNBHW_ROLL_f(SlaveParam_f *pParam)
 {
     Type *pTmp,*pLocalIn,*pLocalOut;
 

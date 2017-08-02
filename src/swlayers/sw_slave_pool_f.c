@@ -10,20 +10,20 @@
 #define min(a,b) ((a)>(b)?(b):(a))
 #define max(a,b) ((a)>(b)?(a):(b))
 
-typedef double Type;
-typedef struct _tagSlavePoolingParam
+typedef float Type;
+typedef struct _tagSlavePoolingParam_f
 {
 	int pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_;
 	int nCount,nThreadsNum,nLeftThreadsNum;
 	int nBottomOffset,nTopOffset,use_top_mask;
 	int  *pMask;
-	double *pTopData,*pBottomData,*pTopMask;
-}SlavePoolingParam;
+	float *pTopData,*pBottomData,*pTopMask;
+}SlavePoolingParam_f;
 
 
 
-//__thread_local_fix  dma_desc pool_dmaget2,dmaputmask,pool_dmaput2;
-void poolingBackwardMax(SlavePoolingParam *pParam)
+__thread_local_fix  dma_desc pool_dmaget2,dmaputmask,pool_dmaput2;
+void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 {
   const int nMaxBuffSize = 49152;//58KB 
 	int pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_;
@@ -32,7 +32,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 	int ph,pw,hstart,hend,wstart,wend,pool_index,h,w,index,bottom_index;
 	Type *pTopData,*pBottomData,*pTopMask;	
 	int  *pMask;	
-  dma_desc pool_dmaget2,pool_dmaput2;	
+  //dma_desc pool_dmaget2,pool_dmaput2;	
 	volatile int getreply=0,putreply=0,putmaskreply=0;	
 	int myid = athread_get_id(-1);
 	
@@ -188,7 +188,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 						
 						index = pool_index+pw;
 						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
-						if(bottom_index<0 || bottom_index > nMaxSize)continue;
+						if(bottom_index<0 || bottom_index >nMaxSize)continue;
             pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
@@ -255,7 +255,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 						
 						index = pool_index+pw;
 						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
-						if(bottom_index <0 || bottom_index > nMaxSize) continue;
+						if(bottom_index <0 || bottom_index >nMaxSize) continue;
             pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
@@ -395,7 +395,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 						
 						index = pool_index+pw;
 						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
-            if(bottom_index<0 || bottom_index>nMaxSize) continue;
+            if(bottom_index<0 || bottom_index > nMaxSize) continue;
 						pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
@@ -451,7 +451,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 			  for (pw = 0; pw < pooled_width_; ++pw) {
 	  			index = pool_index + pw;
 		  		bottom_index =	use_top_mask >0? pTopMask[index] : pMask[index];
-          if(bottom_index<0 || bottom_index > nMaxSize) continue;
+          if(bottom_index<0 || bottom_index >nMaxSize)continue;
 			  	pBottomData[bottom_index] += pTopData[index];
 			  }
 			}
@@ -501,7 +501,7 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 			ldm_free(pMask,nMaskSize);
 	}
 }
-void poolingBackwardAvg(SlavePoolingParam *pParam)
+void poolingBackwardAvg_f(SlavePoolingParam_f *pParam)
 {
   const int nMaxBuffSize = 49152;//58KB 
 	int pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_;
@@ -828,7 +828,7 @@ void poolingBackwardAvg(SlavePoolingParam *pParam)
 		ldm_free(pBottomData,nBottomSize);
 	}
 }
-void poolingForwardMax(SlavePoolingParam *pParam)
+void poolingForwardMax_f(SlavePoolingParam_f *pParam)
 {
   const int nMaxBuffSize = 49152;//58KB 
 	int pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_;
@@ -859,7 +859,7 @@ void poolingForwardMax(SlavePoolingParam *pParam)
 	use_top_mask = pParam->use_top_mask;
 	
 	if(myid >= nMaxThreadsNum) return;	
-	dma_desc pool_dmaget2,dmaputmask,pool_dmaput2;
+	//dma_desc pool_dmaget2,dmaputmask,pool_dmaput2;
 	dma_set_op(&pool_dmaget2, DMA_GET);
 	dma_set_mode(&pool_dmaget2, PE_MODE);
 	dma_set_reply(&pool_dmaget2, &getreply);
@@ -1251,7 +1251,7 @@ void poolingForwardMax(SlavePoolingParam *pParam)
 			ldm_free(pMask,nMaskSize);
 	}
 }
-void poolingForwardAvg(SlavePoolingParam *pParam)
+void poolingForwardAvg_f(SlavePoolingParam_f *pParam)
 {
     const int nMaxBuffSize = 49152;//58KB 
 	int pooled_height_,pooled_width_,stride_h_,stride_w_,pad_h_,pad_w_,kernel_h_,kernel_w_,height_,width_;
