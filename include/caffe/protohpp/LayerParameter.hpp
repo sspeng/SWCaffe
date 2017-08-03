@@ -24,6 +24,7 @@
 #include <caffe/protohpp/DummyDataParameter.hpp>
 #include <caffe/protohpp/LRNParameter.hpp>
 #include <caffe/protohpp/PowerParameter.hpp>
+#include <caffe/protohpp/PReLUParameter.hpp>
 #include <caffe/common.hpp>
 
 namespace caffe {
@@ -158,6 +159,7 @@ class LayerParameter {
       has_convolution_param_ = false;
       has_pooling_param_ = false;
       has_data_param_ = false;
+      has_prelu_param_ = false;
       has_relu_param_ = false;
       has_softmax_param_ = false;
       has_loss_param_=  false;
@@ -204,6 +206,7 @@ class LayerParameter {
       inner_product_param_ = NULL;
       convolution_param_ = NULL;
       pooling_param_ = NULL;
+      prelu_param_ = NULL;
       relu_param_ = NULL;
       softmax_param_ = NULL;
       loss_param_ = NULL;
@@ -257,6 +260,7 @@ class LayerParameter {
       has_pooling_param_ = other.has_pooling_param();
       has_data_param_ = other.has_data_param();
       has_softmax_param_ = other.has_softmax_param();
+      has_prelu_param_ = other.has_prelu_param();
       has_relu_param_ = other.has_relu_param();
       has_loss_param_ = other.has_loss_param();
       has_accuracy_param_ = other.has_accuracy_param();
@@ -291,7 +295,9 @@ class LayerParameter {
       if (has_softmax_param_)
         this->mutable_softmax_param()->CopyFrom(other.softmax_param());
       
-      if (has_relu_param_)
+      if (has_prelu_param_)
+        this->mutable_prelu_param()->CopyFrom(other.prelu_param());
+	    if (has_relu_param_)
         this->mutable_relu_param()->CopyFrom(other.relu_param());
 
       if (has_loss_param_)
@@ -352,6 +358,7 @@ class LayerParameter {
       has_pooling_param_ = false;
       has_data_param_ = false;
       has_softmax_param_ = false;
+      has_prelu_param_ = false;
       has_relu_param_ = false;
       has_loss_param_ = false;
       has_accuracy_param_ = false;
@@ -373,6 +380,7 @@ class LayerParameter {
       if (convolution_param_ != NULL) delete convolution_param_;
       if (pooling_param_ != NULL) delete pooling_param_;
       if (softmax_param_ != NULL) delete softmax_param_;
+      if (prelu_param_ != NULL) delete prelu_param_;
       if (relu_param_ != NULL) delete relu_param_;
       if (loss_param_ != NULL) delete loss_param_;
       if (accuracy_param_ != NULL) delete accuracy_param_;
@@ -555,6 +563,27 @@ class LayerParameter {
       return *data_param_;
     }
     inline bool has_data_param() const { return has_data_param_; }
+   //prelu
+    inline void setup_prelu_param(const PReLUParameter& other) {
+      has_prelu_param_ = true;
+      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
+      prelu_param_->CopyFrom(other);
+    }
+    inline PReLUParameter* add_prelu_param() {
+      has_prelu_param_ = true;
+      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
+      return prelu_param_;
+    }
+    PReLUParameter* mutable_prelu_param() {
+      has_prelu_param_ = true;
+      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
+      return prelu_param_;
+    }
+    inline const PReLUParameter& prelu_param() const {
+      CHECK_NOTNULL(prelu_param_);
+      return *prelu_param_;
+    }
+    inline bool has_prelu_param() const { return has_prelu_param_; }
 
     //relu
     inline void setup_relu_param(const ReLUParameter& other) {
@@ -885,6 +914,8 @@ class LayerParameter {
     bool has_pooling_param_;
     DataParameter* data_param_;
     bool has_data_param_;
+    PReLUParameter* prelu_param_;
+    bool has_prelu_param_;
     ReLUParameter* relu_param_;
     bool has_relu_param_;
     SoftmaxParameter* softmax_param_;

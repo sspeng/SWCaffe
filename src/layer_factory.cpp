@@ -12,6 +12,7 @@
 #include "caffe/layers/lrn_layer.hpp"
 #include "caffe/layers/pooling_layer.hpp"
 #include "caffe/layers/relu_layer.hpp"
+#include "caffe/layers/prelu_layer.hpp"
 //#include "caffe/layers/sigmoid_layer.hpp"
 #include "caffe/layers/softmax_layer.hpp"
 //#include "caffe/layers/tanh_layer.hpp"

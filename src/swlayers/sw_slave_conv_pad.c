@@ -47,14 +47,14 @@ void conv_pad(ConvData* param)
 
 //B, Ni, Ci, Ri
 //fjr1buf
-  SIMDType* local_input  = (SIMDType*) ldm_malloc(sizeof(Type)*Ni*B/8/8);
+  SIMDType* local_input  = (SIMDType*) (long)ldm_malloc(sizeof(Type)*Ni*B/8/8);
   int local_input_size = Ni*B/8/8/SIMDSIZE;
 //No, Ni, K, K
 //fjr1buf
-  Type* local_weight = (Type*) ldm_malloc(sizeof(Type)*Ni*No/8/8);
+  Type* local_weight = (Type*)(long) ldm_malloc(sizeof(Type)*Ni*No/8/8);
   int local_weight_size = Ni*No/64;
 //B, No, Co, Ro
-  SIMDType* local_output = (SIMDType*) ldm_malloc(sizeof(Type)*No*B/8/8*CStride);
+  SIMDType* local_output = (SIMDType*)(long) ldm_malloc(sizeof(Type)*No*B/8/8*CStride);
   int local_output_size = No*B/8/8*CStride;
 
 //  Type local_weight[K*K*Ni/64*No];
