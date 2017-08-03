@@ -490,8 +490,8 @@ $ng..gemm:
 	vlds	$17, 32($25)
 		vmas	$4,$7,$14,$14
 	vlds	$18, 48($25)
-		ldse	$7,0($6)
-		putc	$7,8
+	ldse	$7,0($6)
+	putc	$7,8
 
 	vlds	$20, 0($26)
 		vmas	$1,$8,$15,$15
@@ -729,15 +729,15 @@ $ng..gemm:
 
 	vmas	$1,$10,$24,$24
 		vlds	$1, 0($5)
-		putr	$1, 8
 	vmas	$2,$10,$25,$25
 		vlds	$2, 16($5)              	# [3] id:218
-		putr	$2, 8              	# [3] id:218
 	vmas	$3,$10,$26,$26
 		vlds	$3, 32($5)              	# [3] id:218
-		putr	$3, 8	# [3] id:218
 	vmas	$4,$10,$27,$27
 		vlds	$4, 48($5)              	# [3] id:218
+		putr	$1, 8
+		putr	$2, 8              	# [3] id:218
+		putr	$3, 8	# [3] id:218
 		putr	$4, 8	# [3] id:218
 
 		s4addl	$6,$5,$5            	# [7] input = 4*4*Mld+input 
@@ -924,7 +924,7 @@ $ng..gemm:
 	ldse	$10, 0($0)
 	putc	$10, 8
 		vmas	$3,$7,$13,$13
-	
+
 
 	vlds	$15, 0($25)
 		addw	$31,2,$28					# cK
@@ -959,15 +959,15 @@ $ng..gemm:
 
 	vmas	$1,$10,$24,$24
 		vlds	$1, 0($5)
-		putr	$1, 8 
 	vmas	$2,$10,$25,$25
 		vlds	$2, 16($5)              	# [3] id:218
-		putr	$2, 8              	# [3] id:218
 	vmas	$3,$10,$26,$26
 		vlds	$3, 32($5)              	# [3] id:218
-		putr	$3, 8
 	vmas	$4,$10,$27,$27
 		vlds	$4, 48($5)              	# [3] id:218
+		putr	$1, 8 
+		putr	$2, 8              	# [3] id:218
+		putr	$3, 8
 		putr	$4, 8              	# [3] id:218
 
 	vextw	$29,3,$0			# Mld
@@ -978,43 +978,43 @@ $ng..gemm:
 		s4addl	$19, $6, $0
 	vmas	$1,$7,$11,$11
 		ldse	$8,0($0)
-		putc	$8, 8
 	vmas	$2,$7,$12,$12
 		s4addl	$19, $0, $0
 	vmas	$3,$7,$13,$13
 		ldse	$9, 0($0)
-		putc	$9, 8
 	vmas	$4,$7,$14,$14
-	
-		s4addl	$19, $0, $0
+		putc	$8, 8
+
+    s4addl	$19, $0, $0
 	vmas	$1,$8,$15,$15
 		ldse	$10, 0($0)
-		putc	$10, 8
 	vmas	$2,$8,$16,$16
 		addw	$28,1,$28               	# [7] $5 = cK+=1
 	vmas	$3,$8,$17,$17
 		addl	$6, 4 ,$6              	# [4] weight_ptr += 8  
 	vmas	$4,$8,$18,$18
 		ldse	$7,0($6)
-		putc	$7, 8
 
 	vmas	$1,$9,$20,$20
 		cmple	$19,$28,$0              	# [8] $19 = K <= cK 
 	vmas	$2,$9,$21,$21
+		putc	$9, 8
 	vmas	$3,$9,$22,$22
+		putc	$10, 8
 	vmas	$4,$9,$23,$23
+		putc	$7, 8
 
 	vmas	$1,$10,$24,$24
 		vlds	$1, 0($5)
-		putr	$1, 8
 	vmas	$2,$10,$25,$25
 		vlds	$2, 16($5)              	# [3] id:218
-		putr	$2, 8              	# [3] id:218
 	vmas	$3,$10,$26,$26
 		vlds	$3, 32($5)              	# [3] id:218
-		putr	$3, 8              	# [3] id:218
 	vmas	$4,$10,$27,$27
 		vlds	$4, 48($5)              	# [3] id:218
+		putr	$1, 8
+		putr	$2, 8              	# [3] id:218
+		putr	$3, 8              	# [3] id:218
 		putr	$4, 8
 	vextw	$29,3,$8			# Mld
 		s4addl	$8,$5,$5            	# [7] input = 4*4*Mld+input 
