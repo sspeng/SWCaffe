@@ -41,7 +41,7 @@ run: ./bin/swdnn_main
 	bsub -b -I -m 1 -p -q q_sw_share -host_stack 1000 -share_size 5000 -n 1 -cgsp 64 ./bin/swdnn_main
 ./bin/caffe_main: $(CAFFE_OBJ)
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
-./bin/swdnn_main: $(SWDNN_OBJ)
+./bin/swdnn_main: $(SWDNN_OBJ) 
 	mpiCC $^ -o $@
 
 #intel
