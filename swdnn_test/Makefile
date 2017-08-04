@@ -19,6 +19,9 @@ CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
 							../lib/swcaffe.a
 
 SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
+					 		../swdnn_test/obj/timer.o\
+							../swbuild/swlayers/sw_relu_layer_impl.o\
+							../swbuild/swlayers/sw_slave_relu.o\
 							../swbuild/swlayers/sw_conv_layer_impl.o\
 							../swbuild/swlayers/sw_slave_conv_valid.o\
 							../swbuild/swlayers/sw_slave_conv_full.o\
@@ -35,10 +38,9 @@ SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
 
 #../swdnn_test/obj/conv_layer_impl.o\
 
-
 all: ./bin/swdnn_main
 run: ./bin/swdnn_main
-	bsub -b -I -m 1 -p -q q_sw_share -host_stack 1000 -share_size 5000 -n 1 -cgsp 64 ./bin/swdnn_main
+	bsub -b -I -m 1 -p -q q_sw_expr -host_stack 1000 -share_size 5000 -n 1 -cgsp 64 ./bin/swdnn_main
 ./bin/caffe_main: $(CAFFE_OBJ)
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
 ./bin/swdnn_main: $(SWDNN_OBJ)
@@ -49,8 +51,12 @@ run: ./bin/swdnn_main
 	mpiicc $(FLAGS) $(INC_FLAGS) -c $^ -o $@ 
 ../swdnn_test/obj/test_convolution_layer.o: ../swdnn_test/src/test_convolution_layer.cpp
 	mpiicc $(FLAGS) $(INC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_relu_layer.o: ../swdnn_test/src/test_relu_layer.cpp
+	mpiicc $(FLAGS) $(INC_FLAGS) -c $^ -o $@
 
 #SW26010
+../swdnn_test/obj/timer.o: ../swdnn_test/src/timer.c
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/test_swdnn_main.o: ../swdnn_test/src/test_swdnn_main.cpp 
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@ 
 #../swdnn_test/obj/conv_layer_impl.o: ../swdnn_test/src/conv_layer_impl.cpp
@@ -58,3 +64,7 @@ run: ./bin/swdnn_main
 
 clean:
 	rm ./obj/*
+
+mk:
+	mkdir ./bin
+	mkdir ../swdnn_test/obj/
