@@ -736,11 +736,11 @@ void test_relu_backward() {
 
 }
 
-void test_double2float() {
+void test_double2float(int count,const char* n) {
 #define SRC_TYPE double
 #define DST_TYPE float
   printf("Test double to float conversion...\n");
-  int count = 32*1024*1024; // 8*32M double data;
+  //int count = 32*1024*1024; // 8*32M double data;
   SRC_TYPE* src = (SRC_TYPE*)malloc(count*sizeof(SRC_TYPE));
   DST_TYPE* dst = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
   DST_TYPE* dst_ref = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
@@ -749,12 +749,16 @@ void test_double2float() {
     src[i] = rand()/(SRC_TYPE)RAND_MAX - 0.5;
 
   printf("calling sw_double2float.\n");
-  begin_timer("Accelerated double2float");
+  char str1[100] = "Accelerated double2float ";
+  strcat(str1,n);
+  begin_timer(str1);
   double2float(src,dst,count);
   stop_timer();
 
   printf("calculating reference value.\n");
-  begin_timer("Reference double2float");
+  char str2[100] = "Reference double2float ";
+  strcat(str2,n);
+  begin_timer(str2);
   for( int i = 0; i < count; ++i )
     dst_ref[i] = (DST_TYPE)src[i];
   stop_timer();
@@ -791,11 +795,11 @@ void test_double2float() {
 #undef DST_TYPE
 }
 
-void test_float2double() {
+void test_float2double(int count,const char* n) {
 #define SRC_TYPE float
 #define DST_TYPE double
   printf("Test double to float conversion...\n");
-  int count = 32*1024*1024; // 8*32M double data;
+  //int count = 32*1024*1024; // 8*32M double data;
   SRC_TYPE* src = (SRC_TYPE*)malloc(count*sizeof(SRC_TYPE));
   DST_TYPE* dst = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
   DST_TYPE* dst_ref = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
@@ -804,12 +808,16 @@ void test_float2double() {
     src[i] = rand()/(SRC_TYPE)RAND_MAX - 0.5;
 
   printf("calling sw_double2float.\n");
-  begin_timer("Accelerated float2double");
+  char str1[100] = "Accelerated float2double ";
+  strcat(str1,n);
+  begin_timer(str1);
   float2double(src,dst,count);
   stop_timer();
 
   printf("calculating reference value.\n");
-  begin_timer("Reference float2double");
+  char str2[100] = "Reference float2double ";
+  strcat(str2,n);
+  begin_timer(str2);
   for( int i = 0; i < count; ++i )
     dst_ref[i] = (DST_TYPE)src[i];
   stop_timer();
@@ -845,6 +853,17 @@ void test_float2double() {
 #undef SRC_TYPE
 #undef DST_TYPE
 }
+
+#define TEST_SIZE_1  64*1024
+#define TEST_SIZE_2  128*1024
+#define TEST_SIZE_3  256*1024
+#define TEST_SIZE_4  512*1024
+#define TEST_SIZE_5  1*1024*1024
+#define TEST_SIZE_6  2*1024*1024
+#define TEST_SIZE_7  4*1024*1024
+#define TEST_SIZE_8  8*1024*1024
+#define TEST_SIZE_9  16*1024*1024
+#define TEST_SIZE_10 32*1024*1024
 
 int main() {
   athread_init();
@@ -859,8 +878,26 @@ int main() {
   test_relu_forward_f();
   test_relu_backward_f();
   //test data conversion
-  test_double2float();
-  test_float2double();
+  test_double2float(TEST_SIZE_1,"1");
+  test_float2double(TEST_SIZE_1,"1");
+  test_double2float(TEST_SIZE_2,"2");
+  test_float2double(TEST_SIZE_2,"2");
+  test_double2float(TEST_SIZE_3,"3");
+  test_float2double(TEST_SIZE_3,"3");
+  test_double2float(TEST_SIZE_4,"4");
+  test_float2double(TEST_SIZE_4,"4");
+  test_double2float(TEST_SIZE_5,"5");
+  test_float2double(TEST_SIZE_5,"5");
+  test_double2float(TEST_SIZE_6,"6");
+  test_float2double(TEST_SIZE_6,"6");
+  test_double2float(TEST_SIZE_7,"7");
+  test_float2double(TEST_SIZE_7,"7");
+  test_double2float(TEST_SIZE_8,"8");
+  test_float2double(TEST_SIZE_8,"8");
+  test_double2float(TEST_SIZE_9,"9");
+  test_float2double(TEST_SIZE_9,"9");
+  test_double2float(TEST_SIZE_10,"10");
+  test_float2double(TEST_SIZE_10,"10");
 
   print_timer();
   return 0;

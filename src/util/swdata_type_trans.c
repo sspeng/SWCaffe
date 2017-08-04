@@ -69,7 +69,7 @@ void sw_double2float(DataTransPara *para) {
     dma_wait(&replyput, 1); replyput = 0;
   }
 
-  if(restNum>0) {
+  if(off<local_count) {
     /*
     dma_set_op(&dma_get_src_ua, DMA_GET);
     dma_set_mode(&dma_get_src_ua, PE_MODE);
@@ -86,12 +86,12 @@ void sw_double2float(DataTransPara *para) {
     athread_get(PE_MODE,(src_ptr+off),local_src,(local_count-off)*sizeof(double),&input_replyget,0,0,0);
     while(input_replyget!=1) ; input_replyget = 0;
 
-    for(i=0; i+SIMDSIZE-1<restNum; i+=SIMDSIZE) {
+    for(i=0; i+SIMDSIZE-1<local_count-off; i+=SIMDSIZE) {
       simd_load(vsrc,&local_src[i]);
       vdst = (SIMDTYPEF)vsrc; // convert double to float
       simd_store(vdst,&local_dst[i]);
     }
-    for(;i<restNum;i++) {
+    for(;i<local_count-off;i++) {
       local_dst[i]=local_src[i];
     }
     athread_put(PE_MODE,local_dst,(dst_ptr+off),(local_count-off)*sizeof(float),&replyput,0,0);
@@ -169,12 +169,12 @@ void sw_float2double(DataTransPara *para) {
     athread_get(PE_MODE,(src_ptr+off),local_src,(local_count-off)*sizeof(float),&input_replyget,0,0,0);
     while(input_replyget!=1) ; input_replyget = 0;
 
-    for(i=0; i+SIMDSIZE-1<restNum; i+=SIMDSIZE) {
+    for(i=0; i+SIMDSIZE-1<local_count-off; i+=SIMDSIZE) {
       simd_load(vsrc,&local_src[i]);
       vdst = (SIMDTYPED)vsrc; // convert float to double
       simd_store(vdst,&local_dst[i]);
     }
-    for(;i<restNum;i++) {
+    for(;i<local_count-off;i++) {
       local_dst[i]=local_src[i];
     }
 
