@@ -55,7 +55,7 @@ void swapBN(SlaveParam *pParam)
 	dma_set_reply(&dmaput2, &putreply);	
 	
 	nBNCount = nBNCount < 1 ? 1:nBNCount;
-	pBuff = (Type*)ldm_malloc(nMaxBuffSize);
+	pBuff = (Type*)(long)ldm_malloc(nMaxBuffSize);
 
 	if(pBuff == NULL)
 	{
@@ -216,14 +216,14 @@ void swapNBHW(SlaveParam *pParam)
 	nSize = splitNB*splitHW*sizeof(Type);
 	//if(myid<1)printf("splitHW=%d splitNB=%d nSize=%d\n",splitHW,splitNB,nSize);
 	if(myid >= nMaxThreadsNum) return;	
-    //pTmp = (Type*)ldm_malloc(2*sizeof(double));
-	pLocalIn = (Type*)ldm_malloc(nSize);
+    //pTmp = (Type*)(long)ldm_malloc(2*sizeof(double));
+	pLocalIn = (Type*)(long)ldm_malloc(nSize);
 	if(pLocalIn == NULL)
 	{
 		printf("swapNBHW In ldm_malloc failure!\n");
 		return;
 	}
-	pLocalOut = (Type*)ldm_malloc(nSize);
+	pLocalOut = (Type*)(long)ldm_malloc(nSize);
 	if(pLocalOut == NULL)
 	{
 		printf("swapNBHW Out ldm_malloc failure!\n");
@@ -359,14 +359,14 @@ void swapNBHW_ROLL(SlaveParam *pParam)
 	nSize = splitNB*splitHW*sizeof(Type);
 	
 	if(myid >= nMaxThreadsNum) return;	
-    //pTmp = (Type*)ldm_malloc(2*sizeof(double));
-	pLocalIn = (Type*)ldm_malloc(nSize);
+    //pTmp = (Type*)(long)ldm_malloc(2*sizeof(double));
+	pLocalIn = (Type*)(long)ldm_malloc(nSize);
 	if(pLocalIn == NULL)
 	{
 		printf("swapNBHW In ldm_malloc failure!\n");
 		return;
 	}
-	pLocalOut = (Type*)ldm_malloc(nSize);
+	pLocalOut = (Type*)(long)ldm_malloc(nSize);
 	if(pLocalOut == NULL)
 	{
 		printf("swwapNBHW Out ldm_malloc failure!\n");

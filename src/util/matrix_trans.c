@@ -396,6 +396,18 @@ void image_swdnn_to_caffe_d(double*in,double*out,int B,int N,int H,int W)
 	
 	free(sout);
 }
+void weight_caffe_to_swdnn_d(double*in,double*out,int B,int N,int H,int W)
+{
+	swapBN_HW_d(in,out,B,N,H,W);
+}
+void weight_swdnn_to_caffe_d(double*in,double*out,int B,int N,int H,int W)
+{
+	swapBN_HW_d(in,out,H,W,B,N);
+}
+void image_caffe_to_swdnn_back_d(double*in,double*out,int B,int N,int H,int W)
+{
+	swapBN_HW_d(in,out,B,N,H,W);
+}
 void image_swdnn_to_caffe_f(float*in,float*out,int B,int N,int H,int W)
 {
 	int cRi, cCi, cNi, cB;
@@ -420,4 +432,16 @@ void image_swdnn_to_caffe_f(float*in,float*out,int B,int N,int H,int W)
 	swapBN_f(sout,out,N,B,H,W);
 	
 	free(sout);
+}
+void weight_caffe_to_swdnn_f(float*in,float*out,int B,int N,int H,int W)
+{
+	swapBN_HW_f(in,out,B,N,H,W);
+}
+void weight_swdnn_to_caffe_f(float*in,float*out,int B,int N,int H,int W)
+{
+	swapBN_HW_f(in,out,H,W,B,N);
+}
+void image_caffe_to_swdnn_back_f(float*in,float*out,int B,int N,int H,int W)
+{
+	swapBN_HW_f(in,out,B,N,H,W);
 }

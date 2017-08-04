@@ -115,15 +115,15 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 		if(use_top_mask>0)
 		{
 			nMaskSize = nTopSize;
-			pTopMask  = (Type*)ldm_malloc(nMaskSize);
+			pTopMask  = (Type*)(long)ldm_malloc(nMaskSize);
 		}
 		else
 		{
-			pMask  = (int*)ldm_malloc(nMaskSize);	
+			pMask  = (int*)(long)ldm_malloc(nMaskSize);	
     }	
 		
-		pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);		
+		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);		
 		
 		for(i=0;i<nCount;i++)
 		{   
@@ -413,13 +413,13 @@ void poolingBackwardMax(SlavePoolingParam *pParam)
 	}
 	else
 	{ 
-    pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);
+    pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);
 			
 		if(use_top_mask>0)
-		  pTopMask  = (Type*)ldm_malloc(nMaskSize);
+		  pTopMask  = (Type*)(long)ldm_malloc(nMaskSize);
 		else
-		  pMask  = (int*)ldm_malloc(nMaskSize); 
+		  pMask  = (int*)(long)ldm_malloc(nMaskSize); 
    //	if(pMask == NULL)printf("Backward alloc mask space failure!\n");	
 		dma_set_size(&pool_dmaput2, nBottomSize);
 	  //if(myid<1)printf("nTopOffset=%d nBottomOffset=%d,nTopSize=%d nBottomSize=%d height_=%d width_=%d pooled_height_=%d pooled_width_=%d\n",
@@ -570,8 +570,8 @@ void poolingBackwardAvg(SlavePoolingParam *pParam)
 			nTopSize1 = nLeftRows*pooled_width_*sizeof(Type);							
 		}
 		nBottomSize = nMaxBuffSize - nTopSize;		
-		pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);		
+		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);		
 		
 		for(i=0;i<nCount;i++)
 		{   
@@ -754,8 +754,8 @@ void poolingBackwardAvg(SlavePoolingParam *pParam)
 	}
 	else
 	{ 
-        pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);
+        pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);
 		
 		dma_set_size(&pool_dmaget2, nTopSize);
 		dma_set_size(&pool_dmaput2, nBottomSize);
@@ -921,15 +921,15 @@ void poolingForwardMax(SlavePoolingParam *pParam)
 		if(use_top_mask>0)
 		{
 			nMaskSize = nTopSize;
-			pTopMask  = (Type*)ldm_malloc(nMaskSize);
+			pTopMask  = (Type*)(long)ldm_malloc(nMaskSize);
 		}
 		else
 		{
-			pMask  = (int*)ldm_malloc(nMaskSize);	
+			pMask  = (int*)(long)ldm_malloc(nMaskSize);	
     }	
 		
-		pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);		
+		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);		
 				
 		for(i=0;i<nCount;i++)
 		{   
@@ -1147,13 +1147,13 @@ void poolingForwardMax(SlavePoolingParam *pParam)
 	}
 	else
 	{ 
-    pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);
+    pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);
 			
 		if(use_top_mask>0)
-		  pTopMask  = (Type*)ldm_malloc(nMaskSize);
+		  pTopMask  = (Type*)(long)ldm_malloc(nMaskSize);
 		else
-		  pMask  = (int*)ldm_malloc(nMaskSize); 
+		  pMask  = (int*)(long)ldm_malloc(nMaskSize); 
 		
 		dma_set_size(&pool_dmaput2, nTopSize);
 		dma_set_size(&pool_dmaget2, nBottomSize);
@@ -1320,8 +1320,8 @@ void poolingForwardAvg(SlavePoolingParam *pParam)
 			nTopSize1 = nLeftRows*pooled_width_*sizeof(Type);							
 		}
 		nBottomSize = nMaxBuffSize - nTopSize;		
-		pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);		
+		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);		
 		
 		for(i=0;i<nCount;i++)
 		{   
@@ -1481,8 +1481,8 @@ void poolingForwardAvg(SlavePoolingParam *pParam)
 	}
 	else
 	{ 
-        pTopData  = (Type*)ldm_malloc(nTopSize);
-		pBottomData = (Type*)ldm_malloc(nBottomSize);
+        pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);
 		
 		dma_set_size(&pool_dmaget2, nBottomSize);
 		dma_set_size(&pool_dmaput2, nTopSize);

@@ -42,7 +42,7 @@ void pooling_forward_max_d(int N,int C,double *pTopData,const double *pBottomDat
 	param.pMask = pMask;	
 	param.pTopMask = pTopMask;	
 	param.pTopData = pTopData;	
-	param.pBottomData = pBottomData;	
+	param.pBottomData = (double*)pBottomData;	
 	
 	int nNB = N*C;
 	param.nCount = nNB/NUM_THREADS;
@@ -74,7 +74,7 @@ void pooling_forward_max_f(int N,int C,float *pTopData,const float *pBottomData,
 	param.pMask = pMask;	
 	param.pTopMask = pTopMask;	
 	param.pTopData = pTopData;	
-	param.pBottomData = pBottomData;	
+	param.pBottomData = (float*)pBottomData;	
 	
 	int nNB = N*C;
 	param.nCount = nNB/NUM_THREADS;
@@ -103,7 +103,7 @@ void pooling_forward_avg_d(int N,int C,double *pTopData,const double *pBottomDat
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
 	param.pTopData = pTopData;	
-	param.pBottomData = pBottomData;	
+	param.pBottomData = (double*)pBottomData;	
 	
 	int nNB = N*C;
 	param.nCount = nNB/NUM_THREADS;
@@ -133,7 +133,7 @@ void pooling_forward_avg_f(int N,int C,float *pTopData,const float *pBottomData,
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
 	param.pTopData = pTopData;	
-	param.pBottomData = pBottomData;	
+	param.pBottomData = (float*)pBottomData;	
 	
 	int nNB = N*C;
 	param.nCount = nNB/NUM_THREADS;
@@ -163,9 +163,9 @@ void pooling_backward_max_d(int N,int C,const double *pTopData,double *pBottomDa
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
 	param.use_top_mask = use_top_mask;	
-	param.pMask = pMask;	
-	param.pTopMask = pTopMask;	
-	param.pTopData = pTopData;	
+	param.pMask = (int*)pMask;	
+	param.pTopMask = (double *)pTopMask;	
+	param.pTopData = (double*)pTopData;	
 	param.pBottomData = pBottomData;	
 	
 	int nNB = N*C;
@@ -195,9 +195,9 @@ void pooling_backward_max_f(int N,int C,const float *pTopData,float *pBottomData
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
 	param.use_top_mask = use_top_mask;	
-	param.pMask = pMask;	
-	param.pTopMask = pTopMask;	
-	param.pTopData = pTopData;	
+	param.pMask = (int*)pMask;	
+	param.pTopMask = (float*)pTopMask;	
+	param.pTopData = (float*)pTopData;	
 	param.pBottomData = pBottomData;	
 	
 	int nNB = N*C;
@@ -227,7 +227,7 @@ void pooling_backward_avg_d(int N,int C,const double *pTopData,double *pBottomDa
 	param.width_ = width_;	
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
-	param.pTopData = pTopData;	
+	param.pTopData = (double*)pTopData;	
 	param.pBottomData = pBottomData;	
 	
 	int nNB = N*C;
@@ -257,7 +257,7 @@ void pooling_backward_avg_f(int N,int C,const float *pTopData,float *pBottomData
 	param.width_ = width_;	
 	param.nBottomOffset = nBottomOffset;	
 	param.nTopOffset = nTopOffset;	
-	param.pTopData = pTopData;	
+	param.pTopData = (float*)pTopData;	
 	param.pBottomData = pBottomData;	
 	
 	int nNB = N*C;
@@ -269,3 +269,4 @@ void pooling_backward_avg_f(int N,int C,const float *pTopData,float *pBottomData
 	
 	athread_join();
 }
+
