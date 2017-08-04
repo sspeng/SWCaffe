@@ -33,6 +33,8 @@ SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
 							../swbuild/swlayers/gemm_asm_float.o\
 							../swbuild/util/matrix_trans.o\
 							../swbuild/util/swmatrix_trans.o\
+					 		../swbuild/util/data_type_trans.o\
+					 		../swbuild/util/swdata_type_trans.o\
 							../swbuild/glog/logging.o
 
 
