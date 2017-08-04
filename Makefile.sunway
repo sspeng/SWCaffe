@@ -98,6 +98,11 @@ $(SWBUILD_DIR)/swlayers/gemm_asm.o: ./src/swlayers/gemm.S
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
 $(SWBUILD_DIR)/swlayers/gemm_asm_float.o: ./src/swlayers/gemm_float.S
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
+$(SWBUILD_DIR)/swlayers/sw_relu_layer_impl.o: ./src/swlayers/sw_relu_layer_impl.c
+	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/swlayers/sw_slave_relu.o: ./src/swlayers/sw_slave_relu.c
+	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
+# Your layers compile here
 
 $(SWBUILD_DIR)/%.o: ./src/%.cpp
 	$(CXX) -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
