@@ -362,7 +362,12 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   const bool use_top_mask = top.size() > 1;
   const int* mask = NULL;  // suppress warnings about uninitialized variables
   const Dtype* top_mask = NULL;  
-  
+  /*
+  Dtype dSum1=0,dSum2=0;
+  Dtype* p_bottom_diff = bottom[0]->mutable_cpu_diff();
+  Dtype* bottom_diff_ref = (Dtype*)malloc(bottom[0]->count()*sizeof(Dtype));
+  caffe_set(bottom[0]->count(), Dtype(0), bottom_diff_ref);  // ---!!
+  */
   switch (this->layer_param_.pooling_param().pool()) {
   case PoolingParameter_PoolMethod_MAX:
     // The main loop
@@ -375,7 +380,7 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
   if(pooling_judge_condition(top[0]->num(),channels_,pooled_height_, pooled_width_) >0 )
 	{
 		//printf("Enter Pool Backward_cpu\n");
-    if(	sizeof(Dtype) == sizeof(double))	
+		if(	sizeof(Dtype) == sizeof(double))	
 		   pooling_backward_max_d(top[0]->num(),channels_,(const double*)top_diff,(double*)bottom_diff,(const int*)mask,(const double*)top_mask,
 				bottom[0]->offset(0, 1),top[0]->offset(0, 1),top.size() - 1,pooled_height_, pooled_width_, stride_h_,
 				stride_w_, pad_h_, pad_w_, kernel_h_, kernel_w_, height_, width_);	 
@@ -405,7 +410,16 @@ void PoolingLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
 			}
 		  }
 		}
-	}   
+	}  
+    /*for(int i=0;i<bottom[0]->count();i++)
+    {
+		if(fabs(p_bottom_diff[i]-bottom_diff_ref[i]) >1e-4)
+			printf("%15.3f vs %15.3f\n",p_bottom_diff[i],bottom_diff_ref[i]);
+		dSum1 += p_bottom_diff[i];
+		dSum2 += bottom_diff_ref[i];
+	}		
+	printf("backward pool dSum1=%15.3f dSum2=%15.3f\n",dSum1,dSum2);
+	*/
  #else
 	for (int n = 0; n < top[0]->num(); ++n) {
       for (int c = 0; c < channels_; ++c) {

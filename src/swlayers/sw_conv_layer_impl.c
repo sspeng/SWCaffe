@@ -5,6 +5,8 @@
 #include "caffe/swlayers/sw_conv_layer_impl.h"
 #include "caffe/util/matrix_trans.h"
 
+//#define MPE_TRANS
+
 extern SLAVE_FUN(conv_valid)();
 extern SLAVE_FUN(conv_full)();
 extern SLAVE_FUN(conv_pad)();
@@ -52,8 +54,6 @@ typedef struct ConvData_st{
 
 static int init_flag = 0; 
 
-#define MPE_TRANS
-
 void sw_conv_forward_pad_impl_f(
         const float* in,
         const float* weight,
@@ -91,7 +91,7 @@ void sw_conv_forward_pad_impl_f(
               in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
     printf("in_trans OVER");
 #else
-    image_caffe_to_swdnn_f(in,my_in,B,Ni,Ri,Ci);
+    image_caffe_to_swdnn_f((float*)in,my_in,B,Ni,Ri,Ci);
 #endif
 
 
@@ -104,13 +104,26 @@ void sw_conv_forward_pad_impl_f(
                 weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
     printf("weight_trans OVER");
 #else
-    weight_caffe_to_swdnn_f(weight,my_weight,No,Ni,K,K);
+    weight_caffe_to_swdnn_f((float*)weight,my_weight,No,Ni,K,K);
 #endif
 
+    double* my_in_d = (double*)malloc(sizeof(double)*Ri*Ci*Ni*B);
+    double* my_out_d = (double*)malloc(sizeof(double)*Ro*Co*No*B);
+    double* my_weight_d  = (double*)malloc(sizeof(double)*K*K*No*Ni);
+#ifdef MPE_DOUBLE_TO_FLOAT
+    for( int i = 0; i < Ri*Ci*Ni*B; ++i )
+      my_in_d[i] = (double)my_in[i];
+    for( int i = 0; i < Ro*Co*No*B; ++i )
+      my_out_d[i] = 0.0;
+    for( int i = 0; i < K*K*No*Ni; ++i )
+      my_weight_d[i] = (double)my_weight[i];
+#endif
+
+
     ConvData* param = (ConvData*)malloc(sizeof(ConvData));
-    param->input =  my_in;
-    param->weight = my_weight;
-    param->output = my_out;
+    param->input =  my_in_d;
+    param->weight = my_weight_d;
+    param->output = my_out_d;
 	  param->_Ni = Ni;
 	  param->_Ri = Ri;
 	  param->_Ci = Ci;
@@ -130,15 +143,13 @@ void sw_conv_forward_pad_impl_f(
 	  param->_Costride = Costride;
     assert(Costride > 0);
 	  int ldm_consume = 8*(Ni*No + No*B*Costride + Ni*B);
-	  //printf("ldm comsumption is %d\n", ldm_consume/64);
 	  assert(ldm_consume < 64*1024*64);
-    //memset(param->output, (float)0, sizeof(float)*Ni*B*Ci*Ri);
-	  //printf("befor init forward OK\n");
 
 	  athread_spawn(conv_pad_float, param);
+	  //athread_spawn(conv_pad, param);
 	  athread_join();
 
-#ifdef MPE_TRANS 
+#ifdef MPE_TRANS
     for(cRo = 0; cRo < Ro; ++cRo)
       for(cCo = 0; cCo < Co; ++cCo)
         for(cNo = 0; cNo < No; ++cNo)
@@ -160,9 +171,19 @@ void sw_conv_forward_pad_impl_f(
     exit(0);
     */
 
+#ifdef MPE_DOUBLE_TO_FLOAT
+    for( int i = 0; i < Ro*Co*No*B; ++i )
+      my_out[i] = (float)my_out_d[i];
+#endif
+
+
     free(my_in);
     free(my_weight);
     free(my_out);
+
+    free(my_in_d);
+    free(my_weight_d);
+    free(my_out_d);
     free(param);
 	  //printf("forward pad OK\n");
 }
@@ -204,7 +225,7 @@ void sw_conv_forward_pad_impl_d(
             my_in[image_swdnn_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)] = 
               in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
 #else
-    image_caffe_to_swdnn_d(in,my_in,B,Ni,Ri,Ci);
+    image_caffe_to_swdnn_d((double*)in,my_in,B,Ni,Ri,Ci);
 #endif
 
 
@@ -216,7 +237,7 @@ void sw_conv_forward_pad_impl_d(
               my_weight[weight_swdnn_offset(cNo, cNi, cKr, cKc, No, Ni, K)] = 
                 weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
 #else
-    weight_caffe_to_swdnn_d(weight,my_weight,No,Ni,K,K);
+    weight_caffe_to_swdnn_d((double*)weight,my_weight,No,Ni,K,K);
 #endif
 
     ConvData* param = (ConvData*)malloc(sizeof(ConvData));
@@ -315,7 +336,7 @@ void sw_conv_forward_impl_d(
             my_in[image_swdnn_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)] = 
               in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
 #else
-    image_caffe_to_swdnn_d(in,my_in,B,Ni,Ri,Ci);
+    image_caffe_to_swdnn_d((double*)in,my_in,B,Ni,Ri,Ci);
 #endif
 
 
@@ -327,7 +348,7 @@ void sw_conv_forward_impl_d(
               my_weight[weight_swdnn_offset(cNo, cNi, cKr, cKc, No, Ni, K)] = 
                 weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
 #else
-    weight_caffe_to_swdnn_d(weight,my_weight,No,Ni,K,K);
+    weight_caffe_to_swdnn_d((double*)weight,my_weight,No,Ni,K,K);
 #endif
 
     ConvData* param = (ConvData*)malloc(sizeof(ConvData));
@@ -421,7 +442,7 @@ void sw_conv_backward_impl_d(
                   my_in[image_swdnn_offset_back(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)] = 
                     in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
 #else
-	  image_caffe_to_swdnn_back_d(in,my_in,B, Ni, Ri, Ci);
+	  image_caffe_to_swdnn_back_d((double*)in,my_in,B, Ni, Ri, Ci);
 #endif
 
 
@@ -434,7 +455,7 @@ void sw_conv_backward_impl_d(
                   my_out_grad[image_swdnn_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)] = 
                     out_grad[image_caffe_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)];
 #else
-	image_caffe_to_swdnn_d(out_grad,my_out_grad,B, No, Ro, Co);
+	image_caffe_to_swdnn_d((double*)out_grad,my_out_grad,B, No, Ro, Co);
 #endif
 
     //memset(my_weight_diff, 0, sizeof(double)*Ni*No*K*K);
@@ -494,7 +515,7 @@ void sw_conv_backward_impl_d(
                     = weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
                 }
 #else
-	  weight_caffe_to_swdnn_back_d(weight,my_weight,No, Ni, K, K);
+	  weight_caffe_to_swdnn_back_d((double*)weight,my_weight,No, Ni, K, K);
 #endif
 
     param->input  =   my_out_grad;
@@ -584,7 +605,7 @@ void sw_conv_backward_pad_impl_f(
                   my_in[image_swdnn_offset_back(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)] = 
                     in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
 #else
-	  image_caffe_to_swdnn_back_f(in,my_in,B, Ni, Ri, Ci);
+	  image_caffe_to_swdnn_back_f((float*)in,my_in,B, Ni, Ri, Ci);
 #endif
 
 
@@ -596,7 +617,7 @@ void sw_conv_backward_pad_impl_f(
                   my_out_grad[image_swdnn_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)] = 
                     out_grad[image_caffe_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)];
 #else
-	  image_caffe_to_swdnn_f(out_grad,my_out_grad,B, No, Ro, Co);
+	  image_caffe_to_swdnn_f((float*)out_grad,my_out_grad,B, No, Ro, Co);
 #endif
 
     //memset(my_weight_diff, 0, sizeof(float)*Ni*No*K*K);
@@ -662,7 +683,7 @@ void sw_conv_backward_pad_impl_f(
                     = weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
                 }
 #else
-	  weight_caffe_to_swdnn_back_f(weight,my_weight,No, Ni, K, K);
+	  weight_caffe_to_swdnn_back_f((float*)weight,my_weight,No, Ni, K, K);
 #endif
 
     param->input  =   my_out_grad;
@@ -754,7 +775,7 @@ void sw_conv_backward_pad_impl_d(
                   my_in[image_swdnn_offset_back(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)] = 
                     in[image_caffe_offset(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)];
 #else
-	  image_caffe_to_swdnn_back_d(in,my_in,B, Ni, Ri, Ci);
+	  image_caffe_to_swdnn_back_d((double*)in,my_in,B, Ni, Ri, Ci);
 #endif
 
 
@@ -766,7 +787,7 @@ void sw_conv_backward_pad_impl_d(
                   my_out_grad[image_swdnn_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)] = 
                     out_grad[image_caffe_offset(cB, cNo, cRo, cCo, B, No, Ro, Co)];
 #else
-	  image_caffe_to_swdnn_d(out_grad,my_out_grad,B, No, Ro, Co);
+	  image_caffe_to_swdnn_d((double*)out_grad,my_out_grad,B, No, Ro, Co);
 #endif
 
     //memset(my_weight_diff, 0, sizeof(double)*Ni*No*K*K);
@@ -832,7 +853,7 @@ void sw_conv_backward_pad_impl_d(
                     = weight[weight_caffe_offset(cNo, cNi, cKr, cKc, No, Ni, K)];
                 }
 #else
-	  weight_caffe_to_swdnn_back_d(weight,my_weight,No, Ni, K, K);
+	  weight_caffe_to_swdnn_back_d((double*)weight,my_weight,No, Ni, K, K);
 #endif
 
     param->input  =   my_out_grad;

@@ -24,6 +24,7 @@
 #include <caffe/protohpp/DummyDataParameter.hpp>
 #include <caffe/protohpp/LRNParameter.hpp>
 #include <caffe/protohpp/PowerParameter.hpp>
+#include <caffe/protohpp/PReLUParameter.hpp>
 #include <caffe/common.hpp>
 
 namespace caffe {
@@ -291,7 +292,7 @@ class LayerParameter {
       if (has_softmax_param_)
         this->mutable_softmax_param()->CopyFrom(other.softmax_param());
       
-      if (has_relu_param_)
+	    if (has_relu_param_)
         this->mutable_relu_param()->CopyFrom(other.relu_param());
 
       if (has_loss_param_)

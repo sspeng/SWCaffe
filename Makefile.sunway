@@ -21,10 +21,9 @@ swdnnsrc=$(wildcard ./src/swlayers/*.c ./src/util/*.c)
 SWDNNOBJ=$(patsubst ./src/%, $(SWBUILD_DIR)/%, $(patsubst %.c, %.o, $(swdnnsrc)))
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm.o
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm_float.o
-# uncomment if use swDNN
-FLAGS += -DUSE_SWDNN
 SWOBJ+=$(SWDNNOBJ)
-#FLAGS +=  -DUSE_SWPOOL
+FLAGS += -DUSE_SWDNN
+FLAGS +=  -DUSE_SWPOOL
 
 BIN_DIR=./bin
 lenet: $(BIN_DIR)/test_lenet_sw
@@ -35,11 +34,13 @@ solver: $(BIN_DIR)/test_solver_sw
 mk:
 	mkdir -p $(SWBUILD_DIR) $(SWBUILD_DIR)/util $(SWBUILD_DIR)/layers $(SWBUILD_DIR)/swlayers \
 		$(SWBUILD_DIR)/solvers $(SWBUILD_DIR)/glog ./models/swobj $(BIN_DIR)
+ar: $(SWOBJ)
+	swar rcs ./lib/sw/swcaffe.a $^
 
 runalex:
 	sh ./scripts/sw_runalex.sh 1
 runvgg:
-	sh ./scripts/sw_runvgg.sh 1 
+	sh ./scripts/sw_runvgg.sh 1
 runlenet:
 	sh ./scripts/sw_runlenet.sh 1
 runsolver:
@@ -52,6 +53,8 @@ $(BIN_DIR)/alexnet_sw: ./models/swobj/alexnet.o $(SWOBJ) $(SWLIBOBJ)
 
 $(BIN_DIR)/vggnet_sw: ./models/swobj/vggnet.o $(SWOBJ) $(SWLIBOBJ)
 	$(LINK) $^ $(LDFLAGS)  -o $@
+#$(BIN_DIR)/vggnet_sw: ./models/swobj/vggnet.o ./lib/sw/swcaffe.a $(SWLIBOBJ)
+#	$(LINK) $^ $(LDFLAGS)  -o $@
 ./models/swobj/vggnet.o: ./models/src/vggnet.cpp
 	$(CXX) -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 
