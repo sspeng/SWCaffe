@@ -1,6 +1,7 @@
 extern "C" {
 #include "caffe/swlayers/sw_conv_layer_impl.h"
 #include "caffe/swlayers/sw_relu_layer_impl.h"
+#include "caffe/util/data_type_trans.h"
 #include "athread.h"
 }
 #include "caffe/swlayers/conv_layer_impl.hpp"
@@ -735,6 +736,116 @@ void test_relu_backward() {
 
 }
 
+void test_double2float() {
+#define SRC_TYPE double
+#define DST_TYPE float
+  printf("Test double to float conversion...\n");
+  int count = 32*1024*1024; // 8*32M double data;
+  SRC_TYPE* src = (SRC_TYPE*)malloc(count*sizeof(SRC_TYPE));
+  DST_TYPE* dst = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
+  DST_TYPE* dst_ref = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
+  printf("creating data... SIZE:%d\n",count);
+  for( int i = 0; i < count; ++i )
+    src[i] = rand()/(SRC_TYPE)RAND_MAX - 0.5;
+
+  printf("calling sw_double2float.\n");
+  begin_timer("Accelerated double2float");
+  double2float(src,dst,count);
+  stop_timer();
+
+  printf("calculating reference value.\n");
+  begin_timer("Reference double2float");
+  for( int i = 0; i < count; ++i )
+    dst_ref[i] = (DST_TYPE)src[i];
+  stop_timer();
+
+  printf("calculating errors...\n");
+  float sum=0.0, sum_ref=0.0;
+  printf("inout at 0: In:%lf Ref:%f vs SW:%f\n",src[0],dst_ref[0],dst[0]);
+  for( int i = 0; i < count; ++i ) {
+    sum+=dst[i];
+    sum_ref+=dst_ref[i];
+    if(fabs(dst_ref[i] - dst[i])>1e-4) {
+      printf("WRONG at %d: Ref:%lf vs SW:%lf\n",i,dst_ref[i],dst[i]);
+      printf("\tIn:%lf\n",src[i]);
+      printf("************* double2float FAILED ***************");
+      free(src);
+      free(dst);
+      free(dst_ref);
+      return ;
+    }
+  }
+  if(fabs(sum_ref - sum)>1e-4) {
+      printf("WRONG at SUM: Ref:%lf vs SW:%lf\n",sum_ref,sum);
+      printf("************* double2float FAILED ***************");
+      free(src);
+      free(dst);
+      free(dst_ref);
+      return ;
+  }
+  printf("double2float is OK.");
+  free(src);
+  free(dst);
+  free(dst_ref);
+#undef SRC_TYPE
+#undef DST_TYPE
+}
+
+void test_float2double() {
+#define SRC_TYPE float
+#define DST_TYPE double
+  printf("Test double to float conversion...\n");
+  int count = 32*1024*1024; // 8*32M double data;
+  SRC_TYPE* src = (SRC_TYPE*)malloc(count*sizeof(SRC_TYPE));
+  DST_TYPE* dst = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
+  DST_TYPE* dst_ref = (DST_TYPE*)malloc(count*sizeof(DST_TYPE));
+  printf("creating data... SIZE:%d\n",count);
+  for( int i = 0; i < count; ++i )
+    src[i] = rand()/(SRC_TYPE)RAND_MAX - 0.5;
+
+  printf("calling sw_double2float.\n");
+  begin_timer("Accelerated float2double");
+  float2double(src,dst,count);
+  stop_timer();
+
+  printf("calculating reference value.\n");
+  begin_timer("Reference float2double");
+  for( int i = 0; i < count; ++i )
+    dst_ref[i] = (DST_TYPE)src[i];
+  stop_timer();
+
+  printf("calculating errors...\n");
+  float sum=0.0, sum_ref=0.0;
+  printf("inout at 0: In:%lf Ref:%f vs SW:%f\n",src[0],dst_ref[0],dst[0]);
+  for( int i = 0; i < count; ++i ) {
+    sum+=dst[i];
+    sum_ref+=dst_ref[i];
+    if(fabs(dst_ref[i] - dst[i])>1e-4) {
+      printf("WRONG at %d: Ref:%lf vs SW:%lf\n",i,dst_ref[i],dst[i]);
+      printf("\tIn:%lf\n",src[i]);
+      printf("************* double2float FAILED ***************");
+      free(src);
+      free(dst);
+      free(dst_ref);
+      return ;
+    }
+  }
+  if(fabs(sum_ref - sum)>1e-4) {
+      printf("WRONG at SUM: Ref:%lf vs SW:%lf\n",sum_ref,sum);
+      printf("************* double2float FAILED ***************");
+      free(src);
+      free(dst);
+      free(dst_ref);
+      return ;
+  }
+  printf("double2float is OK.");
+  free(src);
+  free(dst);
+  free(dst_ref);
+#undef SRC_TYPE
+#undef DST_TYPE
+}
+
 int main() {
   athread_init();
   //test_forward_pad();
@@ -747,6 +858,10 @@ int main() {
   test_relu_backward();
   test_relu_forward_f();
   test_relu_backward_f();
+  //test data conversion
+  test_double2float();
+  test_float2double();
+
   print_timer();
   return 0;
 }

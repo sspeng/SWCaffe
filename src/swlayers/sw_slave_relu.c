@@ -23,6 +23,7 @@
 #define max(a,b) ((a)>(b)?(a):(b))
 #define min(a,b) ((a)<(b)?(a):(b))
 
+#define SPNUM 64
 
 #define Type double
 #define SIMDSIZE 1
@@ -36,7 +37,7 @@ void relu_slave_forward_d(ReluData* param)
   int id = athread_get_id(-1);
   count = param->count;
   local_count = count/64 + (id<(count%64));
-  start = id*(count/64)+id*(id<(count%64));
+  start = id*(count/64)+(id<(count%SPNUM)?id:(count%SPNUM));
   int local_inout_size = local_count/SIMDSIZE;
   SIMDType* local_input = (SIMDType*) ldm_malloc(sizeof(Type)*__RELU_BUFFSIZE_1);
   SIMDType* local_output= (SIMDType*) ldm_malloc(sizeof(Type)*__RELU_BUFFSIZE_1);

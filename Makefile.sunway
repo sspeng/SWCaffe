@@ -74,6 +74,10 @@ $(SWBUILD_DIR)/util/swmatrix_trans.o: ./src/util/swmatrix_trans.c
 	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/util/matrix_trans.o: ./src/util/matrix_trans.c
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/swdata_type_trans.o: ./src/util/swdata_type_trans.c
+	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/data_type_trans.o: ./src/util/data_type_trans.c
+	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/swlayers/sw_conv_layer_impl.o: ./src/swlayers/sw_conv_layer_impl.c
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/swlayers/sw_slave_conv_valid.o: ./src/swlayers/sw_slave_conv_valid.c
