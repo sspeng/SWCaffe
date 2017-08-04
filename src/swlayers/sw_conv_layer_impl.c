@@ -52,8 +52,6 @@ typedef struct ConvData_st{
 
 static int init_flag = 0; 
 
-#define MPE_TRANS
-
 void sw_conv_forward_pad_impl_f(
         const float* in,
         const float* weight,
