@@ -5,6 +5,8 @@
 #include "caffe/swlayers/sw_conv_layer_impl.h"
 #include "caffe/util/matrix_trans.h"
 
+//#define MPE_TRANS
+
 extern SLAVE_FUN(conv_valid)();
 extern SLAVE_FUN(conv_full)();
 extern SLAVE_FUN(conv_pad)();
@@ -105,10 +107,23 @@ void sw_conv_forward_pad_impl_f(
     weight_caffe_to_swdnn_f(weight,my_weight,No,Ni,K,K);
 #endif
 
+    double* my_in_d = (double*)malloc(sizeof(double)*Ri*Ci*Ni*B);
+    double* my_out_d = (double*)malloc(sizeof(double)*Ro*Co*No*B);
+    double* my_weight_d  = (double*)malloc(sizeof(double)*K*K*No*Ni);
+#ifdef MPE_DOUBLE_TO_FLOAT
+    for( int i = 0; i < Ri*Ci*Ni*B; ++i )
+      my_in_d[i] = (double)my_in[i];
+    for( int i = 0; i < Ro*Co*No*B; ++i )
+      my_out_d[i] = 0.0;
+    for( int i = 0; i < K*K*No*Ni; ++i )
+      my_weight_d[i] = (double)my_weight[i];
+#endif
+
+
     ConvData* param = (ConvData*)malloc(sizeof(ConvData));
-    param->input =  my_in;
-    param->weight = my_weight;
-    param->output = my_out;
+    param->input =  my_in_d;
+    param->weight = my_weight_d;
+    param->output = my_out_d;
 	  param->_Ni = Ni;
 	  param->_Ri = Ri;
 	  param->_Ci = Ci;
@@ -128,15 +143,13 @@ void sw_conv_forward_pad_impl_f(
 	  param->_Costride = Costride;
     assert(Costride > 0);
 	  int ldm_consume = 8*(Ni*No + No*B*Costride + Ni*B);
-	  //printf("ldm comsumption is %d\n", ldm_consume/64);
 	  assert(ldm_consume < 64*1024*64);
-    //memset(param->output, (float)0, sizeof(float)*Ni*B*Ci*Ri);
-	  //printf("befor init forward OK\n");
 
 	  athread_spawn(conv_pad_float, param);
+	  //athread_spawn(conv_pad, param);
 	  athread_join();
 
-#ifdef MPE_TRANS 
+#ifdef MPE_TRANS
     for(cRo = 0; cRo < Ro; ++cRo)
       for(cCo = 0; cCo < Co; ++cCo)
         for(cNo = 0; cNo < No; ++cNo)
@@ -158,9 +171,19 @@ void sw_conv_forward_pad_impl_f(
     exit(0);
     */
 
+#ifdef MPE_DOUBLE_TO_FLOAT
+    for( int i = 0; i < Ro*Co*No*B; ++i )
+      my_out[i] = (float)my_out_d[i];
+#endif
+
+
     free(my_in);
     free(my_weight);
     free(my_out);
+
+    free(my_in_d);
+    free(my_weight_d);
+    free(my_out_d);
     free(param);
 	  //printf("forward pad OK\n");
 }
