@@ -563,27 +563,6 @@ class LayerParameter {
       return *data_param_;
     }
     inline bool has_data_param() const { return has_data_param_; }
-   //prelu
-    inline void setup_prelu_param(const PReLUParameter& other) {
-      has_prelu_param_ = true;
-      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
-      prelu_param_->CopyFrom(other);
-    }
-    inline PReLUParameter* add_prelu_param() {
-      has_prelu_param_ = true;
-      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
-      return prelu_param_;
-    }
-    PReLUParameter* mutable_prelu_param() {
-      has_prelu_param_ = true;
-      if (prelu_param_ == NULL) prelu_param_ = new PReLUParameter;
-      return prelu_param_;
-    }
-    inline const PReLUParameter& prelu_param() const {
-      CHECK_NOTNULL(prelu_param_);
-      return *prelu_param_;
-    }
-    inline bool has_prelu_param() const { return has_prelu_param_; }
 
     //relu
     inline void setup_relu_param(const ReLUParameter& other) {
