@@ -6,6 +6,7 @@
 #include <simd.h>
 #include <string.h>
 #include <limits.h>
+#include <assert.h>
 
 #define min(a,b) ((a)>(b)?(b):(a))
 #define max(a,b) ((a)>(b)?(a):(b))
@@ -72,14 +73,12 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 
 	if((nTopSize+nBottomSize+nMaskSize) > nMaxBuffSize)
 	{
-		//if(myid<1)printf("pooled_height_=%d pooled_width_=%d height_=%d width_=%d stride_h_=%d stride_w_=%d pad_h_=%d pad_w_=%d\n",
-    //    pooled_height_,pooled_width_,height_,width_,stride_h_,stride_w_,pad_h_,pad_w_);
-    nBottomSize = nMaxBuffSize - nTopSize - nMaskSize;
+	    nBottomSize = nMaxBuffSize - nTopSize - nMaskSize;
 		int nSplitCount=0,nSplitRows =0,nLeftRows = 0;
 		int nTopSize1 = 0,nMaskSize1=0,nBottomIndex;
 		nSplitRows = pooled_height_;
-    int nKernelSize = pooled_height_*width_*sizeof(Type);
-    
+        int nKernelSize = kernel_h_ *width_*sizeof(Type);
+        int nStartAddr = 0;
 		while(nBottomSize <nKernelSize)
 		{
 			nSplitRows = nSplitRows>>1;			
@@ -89,13 +88,14 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 			nBottomSize = nMaxBuffSize - nTopSize - nMaskSize;
 			nSplitCount++;
 		}
+		
 		if(nSplitCount <1){
 			nSplitRows = 0;
 			nLeftRows = pooled_height_;
 			nTopSize1 = pooled_height_ * pooled_width_*sizeof(Type);
 			nMaskSize1 = pooled_height_ * pooled_width_*sizeof(int);
 		}
-    else{
+		else{
 			nSplitCount = pooled_height_/nSplitRows;
 			nLeftRows = pooled_height_%nSplitRows;
 			nTopSize = nSplitRows*pooled_width_*sizeof(Type);
@@ -111,7 +111,9 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 			}				
 			nTopSize1 = nLeftRows*pooled_width_*sizeof(Type);							
 		}
+		
 		nBottomSize = nMaxBuffSize - nTopSize - nMaskSize;
+		//if(myid<1)printf("nSplitCount=%d nSplitRows=%d nTopSize=%d nBottomSize=%d\n",nSplitCount,nSplitRows,nTopSize,nBottomSize);
 		if(use_top_mask>0)
 		{
 			nMaskSize = nTopSize;
@@ -120,11 +122,10 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 		else
 		{
 			pMask  = (int*)(long)ldm_malloc(nMaskSize);	
-    }	
+        }	
 		
 		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
 		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);		
-		
 		for(i=0;i<nCount;i++)
 		{   
 			nOffset = i*nMaxThreadsNum + myid;
@@ -159,7 +160,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pTopMask[index]<hstart)
+							if(pTopMask[index] >=0 && pTopMask[index]<hstart)
 								hstart = pTopMask[index];
 							if(pTopMask[index]>hend)
 								hend = pTopMask[index];
@@ -170,26 +171,27 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pMask[index]<hstart)
+							if(pMask[index] >=0 && pMask[index]<hstart)
 								hstart = pMask[index];
 							if(pMask[index]>hend)
 								hend = pMask[index];
 						}
 					}					
-					hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
+          
+		  			hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
 					hstart = hstart /width_;
 					nKernelSize = (hend - hstart)*width_*sizeof(Type);
-					if(nKernelSize<1) continue;
-          nBottomIndex = nOffset1+hstart*width_;
+					nStartAddr = hstart*width_;
+					nBottomIndex = nOffset1+nStartAddr;
 					dma_set_size(&pool_dmaget2, nKernelSize);  				
 					dma(pool_dmaget2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
 					dma_wait(&getreply,1);getreply=0;
 					for (pw = 0; pw < pooled_width_; ++pw) {
 						
 						index = pool_index+pw;
-						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
+						bottom_index =	(use_top_mask>0 ? pTopMask[index] : pMask[index]) - nStartAddr;
 						if(bottom_index<0 || bottom_index >nMaxSize)continue;
-            pBottomData[bottom_index] += pTopData[index];
+						pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
 					dma(pool_dmaput2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
@@ -197,9 +199,9 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 				}
 			}
 			if(nLeftRows > 0)
-	    {
+			{
 				nOffset = nSplitCount * nSplitRows*pooled_width_;
-				if(use_top_mask>0) 
+			 	if(use_top_mask>0) 
 				{
 					dma_set_size(&pool_dmaget2, nTopSize1);  				
 					dma(pool_dmaget2,(long)(pParam->pTopMask+nOffset0+nOffset),(long)(pTopMask));
@@ -225,7 +227,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pTopMask[index]<hstart)
+							if(pTopMask[index] >=0 && pTopMask[index]<hstart)
 								hstart = pTopMask[index];
 							if(pTopMask[index]>hend)
 								hend = pTopMask[index];
@@ -236,17 +238,19 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pMask[index]<hstart)
+							if(pMask[index] >=0 && pMask[index]<hstart)
 								hstart = pMask[index];
 							if(pMask[index]>hend)
 								hend = pMask[index];
 						}
 					}					
-					hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
+				    hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
 					hstart = hstart /width_;					
-					nKernelSize = (hend - hstart)*width_*sizeof(Type);
-					if(nKernelSize<1)continue;
-          nBottomIndex = nOffset1+hstart*width_;
+        			nKernelSize = (hend - hstart)*width_*sizeof(Type);
+					
+					nStartAddr = hstart*width_;
+					nBottomIndex = nOffset1+nStartAddr;
+					
 					dma_set_size(&pool_dmaget2, nKernelSize);  				
 					dma(pool_dmaget2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
 					dma_wait(&getreply,1);getreply=0;
@@ -254,9 +258,9 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 					for (pw = 0; pw < pooled_width_; ++pw) {
 						
 						index = pool_index+pw;
-						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
+						bottom_index =	(use_top_mask>0 ? pTopMask[index] : pMask[index]) - nStartAddr;
 						if(bottom_index <0 || bottom_index >nMaxSize) continue;
-            pBottomData[bottom_index] += pTopData[index];
+						pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
 					dma(pool_dmaput2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
@@ -299,7 +303,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pTopMask[index]<hstart)
+							if(pTopMask[index]>=0 && pTopMask[index]<hstart)
 								hstart = pTopMask[index];
 							if(pTopMask[index]>hend)
 								hend = pTopMask[index];
@@ -310,26 +314,30 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pMask[index]<hstart)
+							if(pMask[index]>=0 && pMask[index]<hstart)
 								hstart = pMask[index];
 							if(pMask[index]>hend)
 								hend = pMask[index];
 						}
 					}					
+          
 					hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
 					hstart = hstart /width_;
+          
 					nKernelSize = (hend - hstart)*width_*sizeof(Type);
-					if(nKernelSize<1)continue;
-          nBottomIndex = nOffset1+hstart*width_;
+					
+					nStartAddr = hstart*width_;
+					nBottomIndex = nOffset1+nStartAddr;
+					
 					dma_set_size(&pool_dmaget2, nKernelSize);  				
 					dma(pool_dmaget2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
 					dma_wait(&getreply,1);getreply=0;
 					for (pw = 0; pw < pooled_width_; ++pw) {
 						
 						index = pool_index+pw;
-						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
+						bottom_index =	(use_top_mask>0 ? pTopMask[index] : pMask[index]) - nStartAddr;
 						if(bottom_index<0 || bottom_index > nMaxSize)continue;
-            pBottomData[bottom_index] += pTopData[index];
+						pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
 					dma(pool_dmaput2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
@@ -337,9 +345,9 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 				}
 			}
 			if(nLeftRows > 0)
-		  {
+			{
 				nOffset = nSplitCount * nSplitRows*pooled_width_;
-				if(use_top_mask>0) 
+			 	if(use_top_mask>0) 
 				{
 					dma_set_size(&pool_dmaget2, nTopSize1);  				
 					dma(pool_dmaget2,(long)(pParam->pTopMask+nOffset0+nOffset),(long)(pTopMask));
@@ -365,7 +373,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pTopMask[index]<hstart)
+							if(pTopMask[index]>=0 && pTopMask[index]<hstart)
 								hstart = pTopMask[index];
 							if(pTopMask[index]>hend)
 								hend = pTopMask[index];
@@ -376,17 +384,21 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 						for(pw=0;pw<pooled_width_;pw++)
 						{
 							index = pool_index+pw;
-							if(pMask[index]<hstart)
+							if(pMask[index] >=0 && pMask[index]<hstart)
 								hstart = pMask[index];
 							if(pMask[index]>hend)
 								hend = pMask[index];
 						}
 					}					
+          
 					hend = hend %width_ >0 ? (hend /width_)+1 :hend /width_ ;
-					hstart = hstart /width_;					
+					hstart = hstart /width_;				
+         
 					nKernelSize = (hend - hstart)*width_*sizeof(Type);
-					if(nKernelSize<1)continue;
-          nBottomIndex = nOffset1+hstart*width_;
+					
+					nStartAddr = hstart*width_;
+					nBottomIndex = nOffset1+nStartAddr;
+					
 					dma_set_size(&pool_dmaget2, nKernelSize);  				
 					dma(pool_dmaget2,(long)(pParam->pBottomData+nBottomIndex),(long)(pBottomData));
 					dma_wait(&getreply,1);getreply=0;
@@ -394,8 +406,8 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 					for (pw = 0; pw < pooled_width_; ++pw) {
 						
 						index = pool_index+pw;
-						bottom_index =	use_top_mask>0 ? pTopMask[index] : pMask[index];
-            if(bottom_index<0 || bottom_index > nMaxSize) continue;
+						bottom_index =	(use_top_mask>0 ? pTopMask[index] : pMask[index])- nStartAddr;
+						if(bottom_index<0 || bottom_index > nMaxSize) continue;
 						pBottomData[bottom_index] += pTopData[index];
 					}
 					dma_set_size(&pool_dmaput2, nKernelSize);				
@@ -413,24 +425,21 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 	}
 	else
 	{ 
-    pTopData  = (Type*)(long)ldm_malloc(nTopSize);
+		pTopData  = (Type*)(long)ldm_malloc(nTopSize);
 		pBottomData = (Type*)(long)ldm_malloc(nBottomSize);
 			
 		if(use_top_mask>0)
 		  pTopMask  = (Type*)(long)ldm_malloc(nMaskSize);
 		else
 		  pMask  = (int*)(long)ldm_malloc(nMaskSize); 
-   //	if(pMask == NULL)printf("Backward alloc mask space failure!\n");	
 		dma_set_size(&pool_dmaput2, nBottomSize);
-	  //if(myid<1)printf("nTopOffset=%d nBottomOffset=%d,nTopSize=%d nBottomSize=%d height_=%d width_=%d pooled_height_=%d pooled_width_=%d\n",
-    //    nTopOffset,nBottomOffset,nTopSize,nBottomSize,height_,width_,pooled_height_,pooled_width_);		
 		for(i=0;i<nCount;i++)
 		{
 			nOffset = i*nMaxThreadsNum + myid;		
 			nOffset0 = nOffset * nTopOffset;
 			nOffset1 = nOffset * nBottomOffset;
 			
-	    dma_set_size(&pool_dmaget2, nTopSize);
+			dma_set_size(&pool_dmaget2, nTopSize);
 			dma(pool_dmaget2,(long)(pParam->pTopData+nOffset0),(long)(pTopData));
 			memset(pBottomData,0,nBottomSize);
 			dma_wait(&getreply,1);getreply=0;				
@@ -443,7 +452,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 			else
 			{
 				dma_set_size(&pool_dmaget2, nMaskSize);
-        dma(pool_dmaget2,(long)(pParam->pMask+nOffset0),(long)(pMask));
+			dma(pool_dmaget2,(long)(pParam->pMask+nOffset0),(long)(pMask));
 				dma_wait(&getreply,1);getreply=0;	
 			}
 			for (ph = 0; ph < pooled_height_; ++ph) {
@@ -451,7 +460,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 			  for (pw = 0; pw < pooled_width_; ++pw) {
 	  			index = pool_index + pw;
 		  		bottom_index =	use_top_mask >0? pTopMask[index] : pMask[index];
-          if(bottom_index<0 || bottom_index >nMaxSize)continue;
+          if(bottom_index<0 || bottom_index > nMaxSize)continue;
 			  	pBottomData[bottom_index] += pTopData[index];
 			  }
 			}
@@ -486,7 +495,7 @@ void poolingBackwardMax_f(SlavePoolingParam_f *pParam)
 				  index = pool_index + pw;
 				  bottom_index =	use_top_mask >0? pTopMask[index] : pMask[index];
 				  if(bottom_index<0 || bottom_index > nMaxSize)continue;
-          pBottomData[bottom_index] += pTopData[index];
+				  pBottomData[bottom_index] += pTopData[index];
 			  }
 			}
 			dma(pool_dmaput2,(long)(pParam->pBottomData+nOffset1),(long)(pBottomData));
@@ -1019,7 +1028,7 @@ void poolingForwardMax_f(SlavePoolingParam_f *pParam)
 								pMask[pool_index] = index+nOffset;  
 							}
 						  }
-						}					
+					}					
 					}					
 				}
 				nOffset = nSplitCount * nSplitRows*pooled_width_;

@@ -22,9 +22,8 @@ SWDNNOBJ=$(patsubst ./src/%, $(SWBUILD_DIR)/%, $(patsubst %.c, %.o, $(swdnnsrc))
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm.o
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm_float.o
 SWOBJ+=$(SWDNNOBJ)
-# uncomment if use swDNN
 FLAGS += -DUSE_SWDNN
-#FLAGS +=  -DUSE_SWPOOL
+FLAGS +=  -DUSE_SWPOOL
 
 BIN_DIR=./bin
 lenet: $(BIN_DIR)/test_lenet_sw
