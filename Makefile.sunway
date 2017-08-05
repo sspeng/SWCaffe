@@ -23,7 +23,9 @@ SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm.o
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm_float.o
 SWOBJ+=$(SWDNNOBJ)
 FLAGS += -DUSE_SWDNN
-FLAGS +=  -DUSE_SWPOOL
+FLAGS += -DSW_TRANS
+FLAGS += -DUSE_SWPOOL
+FLAGS += -DUSE_SWRELU
 
 BIN_DIR=./bin
 lenet: $(BIN_DIR)/test_lenet_sw
