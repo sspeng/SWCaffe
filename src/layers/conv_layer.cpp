@@ -72,7 +72,7 @@ void ConvolutionLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         );
       } else if ( typeid(Dtype) == typeid(float) ) {
         DLOG(INFO) << "before swDNN-float CONV FORWARD";
-        sw_conv_forward_pad_impl_f(
+        sw_conv_forward_pad_impl_f_fast(
           (float*)bottom_data,
           (float*)weight,
           (float*)top_data,
@@ -266,7 +266,7 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             mypad
             );
         } else if (typeid(Dtype) == typeid(float)) {
-          sw_conv_backward_pad_impl_f(
+          sw_conv_backward_pad_impl_f_fast(
             //const Type* in,
             (float*)bottom_data,
             //const Type* out_grad,

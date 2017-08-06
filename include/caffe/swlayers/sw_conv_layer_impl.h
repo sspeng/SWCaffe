@@ -89,6 +89,32 @@ void sw_conv_backward_pad_impl_f(
         int B,
         int pad);
 
+//in another .c file
+void sw_conv_forward_pad_impl_f_fast(
+        const float* in,
+        const float* weight,
+        float* out,
+        int Ci,
+        int Ri,
+        int K,
+        int Ni,
+        int No,
+        int B,
+        int pad);
 
+void sw_conv_backward_pad_impl_f_fast(
+        const float* in,
+        const float* out_grad,
+        const float* weight,
+        float* in_grad,
+        float* weight_diff,
+        //float* bias_grad,
+        int Ci,
+        int Ri,
+        int K,
+        int Ni,
+        int No,
+        int B,
+        int pad);
 
 #endif

@@ -17,26 +17,30 @@ SWINC_FLAGS=-I../include -I./include -I$(THIRD_PARTY_DIR)/CBLAS/include -I${BOOS
 CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
 							../swdnn_test/obj/test_convolution_layer.o\
 							../lib/swcaffe.a
+#
+#SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
+#					 		../swdnn_test/obj/timer.o\
+#							../swbuild/swlayers/sw_relu_layer_impl.o\
+#							../swbuild/swlayers/sw_slave_relu.o\
+#							../swbuild/swlayers/sw_conv_layer_impl.o\
+#							../swbuild/swlayers/sw_slave_conv_valid.o\
+#							../swbuild/swlayers/sw_slave_conv_full.o\
+#							../swbuild/swlayers/sw_slave_conv_pad.o\
+#							../swbuild/swlayers/sw_slave_conv_pad_float.o\
+#							../swbuild/swlayers/sw_slave_conv_full_pad.o\
+#							../swbuild/swlayers/sw_slave_conv_full_pad_float.o\
+#							../swbuild/swlayers/gemm_asm.o\
+#							../swbuild/swlayers/gemm_asm_float.o\
+#							../swbuild/util/matrix_trans.o\
+#							../swbuild/util/swmatrix_trans.o\
+#					 		../swbuild/util/data_type_trans.o\
+#					 		../swbuild/util/swdata_type_trans.o\
+#							../swbuild/glog/logging.o
 
-SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
-					 		../swdnn_test/obj/timer.o\
-							../swbuild/swlayers/sw_relu_layer_impl.o\
-							../swbuild/swlayers/sw_slave_relu.o\
-							../swbuild/swlayers/sw_conv_layer_impl.o\
-							../swbuild/swlayers/sw_slave_conv_valid.o\
-							../swbuild/swlayers/sw_slave_conv_full.o\
-							../swbuild/swlayers/sw_slave_conv_pad.o\
-							../swbuild/swlayers/sw_slave_conv_pad_float.o\
-							../swbuild/swlayers/sw_slave_conv_full_pad.o\
-							../swbuild/swlayers/sw_slave_conv_full_pad_float.o\
-							../swbuild/swlayers/gemm_asm.o\
-							../swbuild/swlayers/gemm_asm_float.o\
-							../swbuild/util/matrix_trans.o\
-							../swbuild/util/swmatrix_trans.o\
-					 		../swbuild/util/data_type_trans.o\
-					 		../swbuild/util/swdata_type_trans.o\
-							../swbuild/glog/logging.o
 
+OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
+					 		../swdnn_test/obj/timer.o
+SWDNN_OBJ= 	../lib/sw/swcaffe.a
 
 #../swdnn_test/obj/conv_layer_impl.o\
 
@@ -45,7 +49,8 @@ run: ./bin/swdnn_main
 	bsub -b -I -m 1 -p -q q_sw_expr -host_stack 1000 -share_size 5000 -n 1 -cgsp 64 ./bin/swdnn_main
 ./bin/caffe_main: $(CAFFE_OBJ)
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
-./bin/swdnn_main: $(SWDNN_OBJ) 
+./bin/swdnn_main: $(SWDNN_OBJ) $(OBJ)
+	cd .. && make ar
 	mpiCC $^ -o $@
 
 #intel
@@ -61,8 +66,6 @@ run: ./bin/swdnn_main
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/test_swdnn_main.o: ../swdnn_test/src/test_swdnn_main.cpp 
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@ 
-#../swdnn_test/obj/conv_layer_impl.o: ../swdnn_test/src/conv_layer_impl.cpp
-#	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 
 clean:
 	rm ./obj/*
