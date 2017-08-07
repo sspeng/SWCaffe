@@ -134,7 +134,6 @@ void test_forward_pad_float_fast() {
   }
 
 
-  for( int st = 0; st < 1; ++st ){
     begin_timer("sw_conv_pad_forward_impl_f_fast");
     sw_conv_forward_pad_impl_f_fast(
         in,
@@ -149,6 +148,7 @@ void test_forward_pad_float_fast() {
         pad);
     stop_timer();
     printf("sw version pad conv OK\n");
+#ifdef CHECKRES
     conv_forward_pad_impl<double>(
         in_d,
         weight_d,
@@ -161,7 +161,6 @@ void test_forward_pad_float_fast() {
         B,
         pad);
     printf("inner loop OK!\n");
-  }
   float sum = 0, sum_ref = 0;
   for( int i = 0; i < out_size; ++i ) {
    if( fabs(out_ref[i] - out[i]) > 1e-4 )
@@ -170,6 +169,7 @@ void test_forward_pad_float_fast() {
    sum_ref += out_ref[i];
   }
   printf("sum %f vs sum_ref %f athread forward OK!\n", sum, sum_ref);
+#endif
 
   free(out_ref);
   free(out);
@@ -450,7 +450,6 @@ int test_backward_pad_float() {
         B,
         pad);
   stop_timer();
-/*
   conv_backward_pad_impl<float>(
         in,
         out_diff,
@@ -472,7 +471,6 @@ int test_backward_pad_float() {
     if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-2)
       printf("weight_diff %f vs ref %f\n", weight_diff[i], weight_diff_ref[i]);
   printf("backward test OK!");
-  */
 
   free(in);
   free(in_diff);
@@ -529,7 +527,6 @@ int test_backward_pad_float_fast() {
         B,
         pad);
   stop_timer();
-  /*
   conv_backward_pad_impl<float>(
         in,
         out_diff,
@@ -550,7 +547,96 @@ int test_backward_pad_float_fast() {
   for( int i = 0; i < weight_size; ++i )
     if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-2)
       printf("weight_diff %f vs ref %f\n", weight_diff[i], weight_diff_ref[i]);
-      */
+  printf("backward test OK!");
+
+  free(in);
+  free(in_diff);
+  free(in_diff_ref);
+  free(weight_diff);
+  free(weight_diff_ref);
+  free(weight);
+  free(out_diff);
+}
+
+int test_backward_pad_split_float_fast() {
+  int Ni, No, B, Co, Ro, Ci, Ri, K;
+  int pad = 1;
+  Ni = 128;
+  No = 128;
+  B  = 128;
+  Ci = 4;
+  Ri = 4;
+  K  = 3;
+  //for mem alloc
+  Co = Ci - K+1 + 2*pad;
+  Ro = Ri - K+1 + 2*pad;
+
+  int in_size     = Ni*B*Ci*Ri;
+  int weight_size = Ni*No*K*K;
+  int out_size    = No*B*Co*Ro;
+
+  float* in = (float*)malloc(sizeof(float)*in_size);
+  float* in_diff = (float*)malloc(sizeof(float)*in_size);
+  float* in_diff_ref = (float*)malloc(sizeof(float)*in_size);
+  float* weight_diff = (float*)malloc(sizeof(float)*weight_size);
+  float* weight_diff_ref = (float*)malloc(sizeof(float)*weight_size);
+  float* weight = (float*)malloc(sizeof(float)*weight_size);
+  float* out_diff = (float*)malloc(sizeof(float)*out_size);
+
+  for( int i = 0; i < in_size; ++i )
+    in[i] = rand()/(float)RAND_MAX;
+  for( int i = 0; i < weight_size; ++i )
+    weight[i] = rand()/(float)RAND_MAX;
+  for( int i = 0; i < out_size; ++i )
+    out_diff[i] = rand()/(float)RAND_MAX;
+  begin_timer("sw_conv_pad_backward_impl_f_fast");
+  sw_conv_backward_pad_weight_diff_impl_f_fast(
+        in,
+        out_diff,
+        weight,
+        in_diff,
+        weight_diff,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+  sw_conv_backward_pad_in_diff_impl_f_fast(
+        in,
+        out_diff,
+        weight,
+        in_diff,
+        weight_diff,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+  stop_timer();
+  conv_backward_pad_impl<float>(
+        in,
+        out_diff,
+        weight,
+        in_diff_ref,
+        weight_diff_ref,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+
+  for( int i = 0; i < in_size; ++i )
+    if(fabs(in_diff[i] - in_diff_ref[i]) > 1e-2)
+      printf("in_diff %f vs ref %f\n", in_diff[i], in_diff_ref[i]);
+  for( int i = 0; i < weight_size; ++i )
+    if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-2)
+      printf("weight_diff %f vs ref %f\n", weight_diff[i], weight_diff_ref[i]);
   printf("backward test OK!");
 
   free(in);
@@ -609,7 +695,6 @@ int test_backward_pad() {
         B,
         pad);
   stop_timer();
-/*
   conv_backward_pad_impl<double>(
         in,
         out_diff,
@@ -631,7 +716,99 @@ int test_backward_pad() {
     if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-4)
       printf("weight_diff %lf vs ref %lf\n", weight_diff[i], weight_diff_ref[i]);
   printf("backward test OK!");
-*/
+  free(in);
+  free(in_diff);
+  free(in_diff_ref);
+  free(weight_diff);
+  free(weight_diff_ref);
+  free(weight);
+  free(out_diff);
+}
+
+int test_backward_pad_split() {
+  int Ni, No, B, Co, Ro, Ci, Ri, K;
+  int pad = 1;
+  Ni = 128;
+  No = 128;
+  B  = 128;
+  Ci = 4;
+  Ri = 4;
+  K  = 3;
+  //for mem alloc
+  Co = Ci - K+1 + 2*pad;
+  Ro = Ri - K+1 + 2*pad;
+
+  int in_size     = Ni*B*Ci*Ri;
+  int weight_size = Ni*No*K*K;
+  int out_size    = No*B*Co*Ro;
+
+  double* in = (double*)malloc(sizeof(double)*in_size);
+  double* in_diff = (double*)malloc(sizeof(double)*in_size);
+  double* in_diff_ref = (double*)malloc(sizeof(double)*in_size);
+  double* weight_diff = (double*)malloc(sizeof(double)*weight_size);
+  double* weight_diff_ref = (double*)malloc(sizeof(double)*weight_size);
+  double* weight = (double*)malloc(sizeof(double)*weight_size);
+  double* out_diff = (double*)malloc(sizeof(double)*out_size);
+
+  for( int i = 0; i < in_size; ++i )
+    in[i] = rand()/(double)RAND_MAX;
+  for( int i = 0; i < weight_size; ++i )
+    weight[i] = rand()/(double)RAND_MAX;
+  for( int i = 0; i < out_size; ++i )
+    out_diff[i] = rand()/(double)RAND_MAX;
+
+  begin_timer("sw_conv_pad_backward_impl_d");
+  sw_conv_backward_pad_weight_diff_impl_d(
+        in,
+        out_diff,
+        weight,
+        in_diff,
+        weight_diff,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+  sw_conv_backward_pad_in_diff_impl_d(
+        in,
+        out_diff,
+        weight,
+        in_diff,
+        weight_diff,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+  stop_timer();
+
+#ifdef CHECKRES
+  conv_backward_pad_impl<double>(
+        in,
+        out_diff,
+        weight,
+        in_diff_ref,
+        weight_diff_ref,
+        Ci,
+        Ri,
+        K,
+        Ni,
+        No,
+        B,
+        pad);
+
+  for( int i = 0; i < in_size; ++i )
+    if(fabs(in_diff[i] - in_diff_ref[i]) > 1e-4)
+      printf("in_diff %lf vs ref %lf\n", in_diff[i], in_diff_ref[i]);
+  for( int i = 0; i < weight_size; ++i )
+    if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-4)
+      printf("weight_diff %lf vs ref %lf\n", weight_diff[i], weight_diff_ref[i]);
+#endif
+  printf("backward test OK!");
   free(in);
   free(in_diff);
   free(in_diff_ref);
@@ -1042,12 +1219,16 @@ int main() {
   athread_init();
   //test_forward_pad();
   //test_forward_pad_float();
-  //test_forward_pad_float_fast();
+  for(int i = 0; i < 10; ++i)
+    test_forward_pad_float_fast();
 
-  test_backward_pad();
-  test_backward_pad_float();
-  test_backward_pad_float_fast();
-  
+  //test_backward_pad();
+  //test_backward_pad_float();
+  //test_backward_pad_float_fast();
+  //test_backward_pad_split_float_fast();
+  for(int i = 0; i < 10; ++i)
+    test_backward_pad_split();
+
   //test_backward();
   //test_forward();
   //test_relu_forward();
