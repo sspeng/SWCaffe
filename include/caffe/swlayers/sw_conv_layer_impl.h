@@ -30,6 +30,18 @@ void sw_conv_forward_pad_impl_f(
         int No,
         int B,
         int pad);
+void sw_conv_forward_pad_impl_f_ori(
+        const float* in,
+        const float* weight,
+        float* out,
+        int Ci,
+        int Ri,
+        int K,
+        int Ni,
+        int No,
+        int B,
+        int pad);
+
 
 
 void sw_conv_forward_pad_impl_d(

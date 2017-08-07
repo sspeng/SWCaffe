@@ -99,6 +99,8 @@ $(SWBUILD_DIR)/swlayers/sw_slave_conv_full.o: ./src/swlayers/sw_slave_conv_full.
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
 $(SWBUILD_DIR)/swlayers/sw_slave_conv_pad_float.o: ./src/swlayers/sw_slave_conv_pad_float.c
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
+$(SWBUILD_DIR)/swlayers/sw_slave_conv_pad_float2double.o: ./src/swlayers/sw_slave_conv_pad_float2double.c
+	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
 $(SWBUILD_DIR)/swlayers/sw_slave_conv_pad.o: ./src/swlayers/sw_slave_conv_pad.c
 	$(SWCXX) $(FLAGS) $(SWINC_FLAGS) -msimd -c $< -o $@
 $(SWBUILD_DIR)/swlayers/sw_slave_conv_full_pad_float.o: ./src/swlayers/sw_slave_conv_full_pad_float.c
