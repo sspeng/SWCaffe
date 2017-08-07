@@ -16,7 +16,6 @@ void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
   const int count = bottom[0]->count();
   Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
   if( typeid(Dtype) == typeid(double) ) {
-        DLOG(INFO) << "before swDNN-double RELU FORWARD";
     sw_relu_forward_impl_d(
         (double*)bottom_data,
         (double*)top_data,
@@ -24,9 +23,7 @@ void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // int count
         count
         );
-        DLOG(INFO) << "end swDNN-double RELU FORWARD";
   } else if ( typeid(Dtype) == typeid(float) ) {
-        DLOG(INFO) << "before swDNN-float RELU FORWARD";
     sw_relu_forward_impl_f(
         (float*)bottom_data,
         (float*)top_data,
@@ -34,7 +31,6 @@ void ReLULayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
         // int count
         count
         );
-        DLOG(INFO) << "end swDNN-float RELU FORWARD";
   }
 #else
   const Dtype* bottom_data = bottom[0]->cpu_data();
@@ -60,7 +56,6 @@ void ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     const int count = bottom[0]->count();
     Dtype negative_slope = this->layer_param_.relu_param().negative_slope();
     if( typeid(Dtype) == typeid(double) ) {
-        DLOG(INFO) << "before swDNN-double RELU BACKWARD";
       sw_relu_backward_impl_d(
         (double*)bottom_data,
         (double*)top_diff,
@@ -69,9 +64,7 @@ void ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // int count
         count
         );
-        DLOG(INFO) << "end swDNN-double RELU BACKWARD";
     } else if ( typeid(Dtype) == typeid(float) ) {
-        DLOG(INFO) << "before swDNN-float RELU BACKWARD";
       sw_relu_backward_impl_f(
         (float*)bottom_data,
         (float*)top_diff,
@@ -80,7 +73,6 @@ void ReLULayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
         // int count
         count
         );
-        DLOG(INFO) << "end swDNN-float RELU BACKWARD";
     }
   }
 #else

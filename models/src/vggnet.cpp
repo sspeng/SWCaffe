@@ -256,9 +256,8 @@ int main (int argc, char ** argv) {
 #endif
 #endif
 
-  //shared_ptr<Solver<float> >
-  //    solver(SolverRegistry<float>::CreateSolver(solver_param));
-
+//  shared_ptr<Solver<double> >
+//      solver(SolverRegistry<double>::CreateSolver(solver_param));
   shared_ptr<Solver<float> >
       solver(SolverRegistry<float>::CreateSolver(solver_param));
 #ifdef DEBUG_VERBOSE_1
