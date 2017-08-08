@@ -4,6 +4,8 @@ SWCXX = 	sw5cc.new -slave
 FLAGS = 	-O2 -OPT:IEEE_arith=2
 FLAGS += 	-DCPU_ONLY
 FLAGS += 	-DDEBUG_VERBOSE_2
+#print timer in sw_conv_layer_impl
+FLAGS += 	-DDEBUG_VERBOSE_3
 #FLAGS +=  -DMYMPI
 LDFLAGS = -lm_slave -allshare
 
@@ -36,6 +38,7 @@ solver: $(BIN_DIR)/test_solver_sw
 mk:
 	mkdir -p $(SWBUILD_DIR) $(SWBUILD_DIR)/util $(SWBUILD_DIR)/layers $(SWBUILD_DIR)/swlayers \
 		$(SWBUILD_DIR)/solvers $(SWBUILD_DIR)/glog ./models/swobj $(BIN_DIR)
+	mkdir -p lib/sw
 ar: $(SWOBJ)
 	swar rcs ./lib/sw/swcaffe.a $^
 
@@ -121,6 +124,8 @@ $(SWBUILD_DIR)/layers/%.o: ./src/layers/%.cpp
 	$(CXX) -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/util/%.o: ./src/util/%.cpp
 	$(CXX) -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/%.o: ./src/util/%.c
+	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/solvers/%.o: ./src/solvers/%.cpp
 	$(CXX) -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/glog/%.o: ./src/glog/%.cpp

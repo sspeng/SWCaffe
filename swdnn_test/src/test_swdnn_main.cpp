@@ -12,6 +12,7 @@ extern "C" {
 #include <stdio.h>
 #include "athread.h"
 #include "timer.h"
+#include <sys/time.h>
 
 void test_forward_pad_float() {
   int Ni, No, B, Co, Ro, Ci, Ri, K, pad;
@@ -47,7 +48,10 @@ void test_forward_pad_float() {
 
 
   for( int st = 0; st < 1; ++st ){
-    begin_timer("sw_conv_pad_forward_impl_f");
+    //begin_timer("sw_conv_pad_forward_impl_f");
+    struct timeval ts, te;
+    gettimeofday(&ts, NULL);
+
     sw_conv_forward_pad_impl_f(
         in,
         weight,
@@ -59,8 +63,10 @@ void test_forward_pad_float() {
         No,
         B,
         pad);
-    stop_timer();
-    printf("sw version pad conv OK\n");
+
+    gettimeofday(&te, NULL);
+    double time = (te.tv_sec - ts.tv_sec) + (te.tv_usec - ts.tv_usec) / 1000000.0;
+    printf("sw version pad conv OK, time is %lf\n", time);
 /*
     conv_forward_pad_impl<float>(
         in,
@@ -407,11 +413,11 @@ int test_backward() {
 int test_backward_pad_float() {
   int Ni, No, B, Co, Ro, Ci, Ri, K;
   int pad = 1;
-  Ni = 128;
-  No = 128;
+  Ni = 512;
+  No = 512;
   B  = 128;
-  Ci = 4;
-  Ri = 4;
+  Ci = 8;
+  Ri = 8;
   K  = 3;
   //for mem alloc
   Co = Ci - K+1 + 2*pad;
@@ -435,7 +441,9 @@ int test_backward_pad_float() {
     weight[i] = rand()/(float)RAND_MAX;
   for( int i = 0; i < out_size; ++i )
     out_diff[i] = rand()/(float)RAND_MAX;
-  begin_timer("sw_conv_pad_backward_impl_f");
+    
+  struct timeval ts, te;
+  gettimeofday(&ts, NULL);
   sw_conv_backward_pad_impl_f(
         in,
         out_diff,
@@ -449,7 +457,11 @@ int test_backward_pad_float() {
         No,
         B,
         pad);
-  stop_timer();
+
+  gettimeofday(&te, NULL);
+  double time = (te.tv_sec - ts.tv_sec) + (te.tv_usec - ts.tv_usec) / 1000000.0;
+  printf("sw_conv_backward_pad_impl_f OK, time is %lf\n", time);
+#ifdef CHECKRES
   conv_backward_pad_impl<float>(
         in,
         out_diff,
@@ -471,6 +483,7 @@ int test_backward_pad_float() {
     if(fabs(weight_diff[i] - weight_diff_ref[i]) > 1e-2)
       printf("weight_diff %f vs ref %f\n", weight_diff[i], weight_diff_ref[i]);
   printf("backward test OK!");
+#endif
 
   free(in);
   free(in_diff);
@@ -1218,16 +1231,14 @@ void test_float2double(int count,const char* n) {
 int main() {
   athread_init();
   //test_forward_pad();
-  //test_forward_pad_float();
-  for(int i = 0; i < 10; ++i)
-    test_forward_pad_float_fast();
+  test_forward_pad_float();
+  //test_forward_pad_float_fast();
 
   //test_backward_pad();
-  //test_backward_pad_float();
+  test_backward_pad_float();
   //test_backward_pad_float_fast();
   //test_backward_pad_split_float_fast();
-  for(int i = 0; i < 10; ++i)
-    test_backward_pad_split();
+  //test_backward_pad_split();
 
   //test_backward();
   //test_forward();

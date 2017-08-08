@@ -240,8 +240,104 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       }
 
 
-    if( 
+    if(
+        bottom[0]->channels() >= 128
+        && bottom[0]->channels()%128 == 0
+        && bottom[0]->num() >= 64
+        && bottom[0]->num() % 32 == 0
+        && top[0]->channels() >= 64
+        && top[0]->channels()%32 == 0
+        && bottom[0]->num() >= 128
+        && bottom[0]->num() % 128 == 0
+        && top[0]->channels() % 32 == 0
+        && top[0]->channels() >= 64
+        && bottom[0]->channels() % 32 == 0
+        && bottom[0]->channels() >= 64
 
+      ) {
+      if (this->param_propagate_down_[0] || propagate_down[i]) {
+        if(typeid(Dtype)== typeid(double)) {
+          sw_conv_backward_pad_impl_d(
+            //const Type* in,
+            (double*)bottom_data,
+            //const Type* out_grad,
+            (double*)top_diff,
+            //Type* weight,
+            (double*)weight,
+            //Type* in_grad,
+            (double*)bottom_diff,
+            //Type* weight_diff,
+            (double*)weight_diff,
+            //Type* bias_grad,
+            //bias_diff,
+            //int Ci,
+            bottom[0]->width(),
+            //int Ri,
+            bottom[0]->height(),
+            //int K,
+            this->kernel_shape().cpu_data()[0],
+            //int Ni,
+            bottom[0]->channels(),
+            //int No,
+            top[0]->channels(),
+            //int B
+            bottom[0]->num(),
+            mypad
+            );
+        } else if (typeid(Dtype) == typeid(float)) {
+          sw_conv_backward_pad_impl_f(
+            //const Type* in,
+            (float*)bottom_data,
+            //const Type* out_grad,
+            (float*)top_diff,
+            //Type* weight,
+            (float*)weight,
+            //Type* in_grad,
+            (float*)bottom_diff,
+            //Type* weight_diff,
+            (float*)weight_diff,
+            //Type* bias_grad,
+            //bias_diff,
+            //int Ci,
+            bottom[0]->width(),
+            //int Ri,
+            bottom[0]->height(),
+            //int K,
+            this->kernel_shape().cpu_data()[0],
+            //int Ni,
+            bottom[0]->channels(),
+            //int No,
+            top[0]->channels(),
+            //int B
+            bottom[0]->num(),
+            mypad
+            );
+        }
+      }
+    else {
+      LOG(INFO) << "before SWBLAS for back conv"; 
+      if (this->param_propagate_down_[0] || propagate_down[i]) {
+        for (int n = 0; n < this->num_; ++n) {
+          // gradient w.r.t. weight. Note that we will accumulate diffs.
+          if (this->param_propagate_down_[0]) {
+            this->weight_cpu_gemm(bottom_data + n * this->bottom_dim_,
+                top_diff + n * this->top_dim_, weight_diff);
+          }
+          // gradient w.r.t. bottom data, if necessary.
+          if (propagate_down[i]) {
+            this->backward_cpu_gemm(top_diff + n * this->top_dim_, weight,
+                bottom_diff + n * this->bottom_dim_);
+          }
+        }
+      }
+      LOG(INFO) << "end SWBLAS for back conv"; 
+    }//else
+
+    } else {
+      /**
+       * backward conv split
+       */
+    if(
         bottom[0]->channels() >= 128
         && bottom[0]->channels()%128 == 0
         && bottom[0]->num() >= 64
@@ -399,7 +495,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
             );
         }
       }
-    } else {
+    } 
+    else {
       LOG(INFO) << "before conv-SWBLAS for back conv in_diff";
       if (this->param_propagate_down_[0] || propagate_down[i]) {
         for (int n = 0; n < this->num_; ++n) {
@@ -413,6 +510,8 @@ void ConvolutionLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
       LOG(INFO) << "end SWBLAS for back conv in_diff";
 
     }
+
+    }// if not split
   }//for
 #else
 
