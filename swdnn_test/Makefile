@@ -12,6 +12,8 @@ LDFLAGS += -L../../thirdparty/openblas_install/lib -lopenblas
 
 THIRD_PARTY_DIR=../../thirdparty
 SWINC_FLAGS=-I../include -I./include -I$(THIRD_PARTY_DIR)/CBLAS/include -I${BOOST_DIR}
+SWLIBOBJ=$(THIRD_PARTY_DIR)/swblas/SWCBLAS/lib/cblas_LINUX0324.a
+SWLIBOBJ+=$(THIRD_PARTY_DIR)/swblas/SWCBLAS/libswblas0324.a
 
 
 CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
@@ -51,7 +53,7 @@ run: ./bin/swdnn_main
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
 ./bin/swdnn_main: $(SWDNN_OBJ) $(OBJ)
 	cd .. && make ar
-	mpiCC $^ -o $@
+	mpiCC $^ -o $@ $(SWLIBOBJ)
 
 #intel
 ../swdnn_test/obj/test_caffe_main.o: ../swdnn_test/src/test_caffe_main.cpp 
@@ -65,7 +67,7 @@ run: ./bin/swdnn_main
 ../swdnn_test/obj/timer.o: ../swdnn_test/src/timer.c
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/test_swdnn_main.o: ../swdnn_test/src/test_swdnn_main.cpp 
-	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@ 
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 
 clean:
 	rm ./obj/*

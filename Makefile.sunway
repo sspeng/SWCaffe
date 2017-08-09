@@ -83,6 +83,11 @@ $(SWBUILD_DIR)/util/swmatrix_trans.o: ./src/util/swmatrix_trans.c
 $(SWBUILD_DIR)/util/swmatrix_trans_f.o: ./src/util/swmatrix_trans_f.c
 	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 
+$(SWBUILD_DIR)/util/sw_slave_im2col.o: ./src/util/sw_slave_im2col.c
+	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/swim2col.o: ./src/util/swim2col.c
+	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+
 $(SWBUILD_DIR)/util/matrix_trans.o: ./src/util/matrix_trans.c
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/util/swdata_type_trans.o: ./src/util/swdata_type_trans.c
