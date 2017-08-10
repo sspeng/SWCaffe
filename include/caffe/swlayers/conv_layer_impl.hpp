@@ -205,21 +205,21 @@ void conv_backward_pad_impl(
     int Ro = Ri+2*pad-K+1;
     int gr, gc, lr, lc;
     //printf("Ci=%d Ri=%d Co=%d Ro=%d\n",Ci,Ri,Co,Ro);
-// in_grad = conv(out_grad, rot180(weight), 'full')
-// can be implemented with sw_slave_conv_pad_full
+    // in_grad = conv(out_grad, rot180(weight), 'full')
+    // can be implemented with sw_slave_conv_pad_full
+    //TODO
     memset(in_grad, 0, sizeof(Type)*Ni*B*Ci*Ri);
     for( cB = 0; cB < B; cB++ ) {
        for( cNo = 0; cNo < No; cNo++ )
         for( cNi = 0; cNi < Ni; cNi++ )
               for(cKr=0; cKr < K; ++cKr)
                 for(cKc=0; cKc < K; ++cKc){
-                  for(cRo=0;cRo<Ro;cRo++){                    
+                  for(cRo=0;cRo<Ro;cRo++){
                    int cRi = cRo +cKr -pad;
                    for(cCo=0;cCo<Co;cCo++){
                     int cCi = cCo+cKc - pad;
                     if( !(cCi >=0 && cCi < Ci && cRi >= 0 && cRi < Ri) )
                     continue;
-                  
                     *(in_grad+inGetIdx(cB, cNi, cRi, cCi, B, Ni, Ri, Ci)) +=
                     *(out_grad+outGetIdx(cB, cNo, cRo, cCo, B, No, Ro, Co)) *
                     *(weight+weightGetIdx( cNo, cNi,  K-1-cKr, K-1-cKc, No, Ni, K));

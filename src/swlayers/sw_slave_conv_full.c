@@ -112,12 +112,12 @@ void conv_full(ConvData* param)
     //fjrbp
     if(CiEnd > Ci+2*(K-1))
       CiEnd = Ci+2*(K-1);
-	
+
     //input init
     for(cRo=0; cRo<Ro; ++cRo){
 
-      Type* output_ptr = param->output + rid*B/8 + cid*No/8*B + B*No*(cRo*Co+CoStart);
-     
+    Type* output_ptr = param->output + rid*B/8 + cid*No/8*B + B*No*(cRo*Co+CoStart);
+
 	  //init local_output
 	  for(i = 0; i<local_output_size/SIMDSIZE; ++i)
 		local_output[i] = 0.0;
@@ -130,37 +130,34 @@ void conv_full(ConvData* param)
         if(!(lr >= 0 && lr < Ri))
             continue;
 
-		for(cCi=CoStart; cCi<CiEnd; ++cCi){
+		    for(cCi=CoStart; cCi<CiEnd; ++cCi){
             int lc = cCi - (K-1);
             if(!(lc >= 0 && lc < Ci))
                 continue;
 
 //for back
 			//dma(dma_get_input, (long)(input_start + (cCi+cRi*Ci)*Ni*B), (long)(local_input));
-			dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
-			dma_wait(&input_replyget, 1); input_replyget = 0;
+			  dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
+			  dma_wait(&input_replyget, 1); input_replyget = 0;
 
-          for(cKc=0; cKc<K; ++cKc){
+        for(cKc=0; cKc<K; ++cKc){
 
-			dma(dma_get_weight, (long)(weight_ptr + (cKc+cKr*K)*Ni*No), (long)(local_weight));
-			dma_wait(&weight_replyget, 1); weight_replyget = 0;
 
-            cCo = cCi-cKc;
-            if(cCo >= CoStart && cCo < CoEnd){
-    			dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
-    			dma_wait(&input_replyget, 1); input_replyget = 0;
-    
+        cCo = cCi-cKc;
+        if(cCo >= CoStart && cCo < CoEnd){
+			    dma(dma_get_weight, (long)(weight_ptr + (cKc+cKr*K)*Ni*No), (long)(local_weight));
+			    dma_wait(&weight_replyget, 1); weight_replyget = 0;
 
-				gemm((Type*)(local_input),
-				(Type*)(local_weight),
-				(Type*)(local_output + (cCo-CoStart)*No*B/64/SIMDSIZE),
-				B/8/4, 
-				B/8/4, 
-				No/8, 
-				Ni/8, 
-				rid, 
-				cid);
-			}//if
+			  	gemm((Type*)(local_input),
+			  	(Type*)(local_weight),
+			  	(Type*)(local_output + (cCo-CoStart)*No*B/64/SIMDSIZE),
+			  	B/8/4, 
+			  	B/8/4, 
+			  	No/8, 
+			  	Ni/8, 
+			  	rid, 
+			  	cid);
+			  }//if
           }//cKc
         }//cCi
 

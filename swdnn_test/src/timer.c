@@ -41,15 +41,13 @@ void begin_timer(const char *fn) {
   isTiming = 1;
   //startTime = clock();
   gettimeofday(&tval,0);
-//  startTime = tval.tv_sec*1000000+tval.tv_usec;
-  startSec = tval.tv_sec;
-  startUsec = tval.tv_usec;
+  startTime = tval.tv_sec*1000000+tval.tv_usec;
 }
 
 void stop_timer() {
   struct timeval tval;
   gettimeofday(&tval,0);
-  //long endTime = tval.tv_sec*1000000+tval.tv_usec;
+  long endTime = tval.tv_sec*1000000+tval.tv_usec;
   if(!isTiming) return ;
   isTiming = 0;
   timer[timer_index]+= (double)(tval.tv_sec - startSec)/1e6 + (tval.tv_usec - startUsec);

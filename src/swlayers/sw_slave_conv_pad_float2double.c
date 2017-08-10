@@ -19,11 +19,13 @@
 #include "dma.h"
 #include "caffe/swlayers/gemm.h"
 
-#define SIMDSIZE 4
-#define SIMDType doublev4
-#define Type double
+#define SIMDSIZE  4
+#define SIMDType  floatv4
+#define Type      float
+#define SIMDTypeD doublev4
+#define TypeD     double
 
-void conv_pad(ConvData* param)
+void conv_pad_float__(ConvData* param)
 {
   int cB, cNi, cRi, cCi, cKr, cKc, ccCore, crCore, cNo;
   int ii, jj, cRo, cCo;
@@ -47,15 +49,23 @@ void conv_pad(ConvData* param)
 
 //B, Ni, Ci, Ri
 //fjr1buf
-  SIMDType* local_input  = (SIMDType*) (long)ldm_malloc(sizeof(Type)*Ni*B/8/8);
+  SIMDType* local_input  = (SIMDType*) (long)ldm_malloc(sizeof(TypeD)*Ni*B/8/8);
   int local_input_size = Ni*B/8/8/SIMDSIZE;
 //No, Ni, K, K
 //fjr1buf
-  Type* local_weight = (Type*)(long) ldm_malloc(sizeof(Type)*Ni*No/8/8);
+  Type* local_weight = (Type*)(long) ldm_malloc(sizeof(TypeD)*Ni*No/8/8);
   int local_weight_size = Ni*No/64;
 //B, No, Co, Ro
-  SIMDType* local_output = (SIMDType*)(long) ldm_malloc(sizeof(Type)*No*B/8/8*CStride);
+  SIMDType* local_output = (SIMDType*)(long) ldm_malloc(sizeof(TypeD)*No*B/8/8*CStride);
   int local_output_size = No*B/8/8*CStride;
+  SIMDTypeD vdbl;
+  SIMDType vflt;
+  Type*  fptr = (Type *)local_input;
+  TypeD* dptr = (TypeD*)local_input;
+  Type*  wfptr = (Type *)local_weight;
+  TypeD* wdptr = (TypeD*)local_weight;
+  Type*  ofptr = (Type *)local_output;
+  TypeD* odptr = (TypeD*)local_output;
 
 //  Type local_weight[K*K*Ni/64*No];
 //initilize DMA variables
@@ -119,7 +129,7 @@ void conv_pad(ConvData* param)
 
       Type* output_ptr = (Type*)param->output + rid*B/8 + cid*No/8*B + B*No*(cRo*Co+CoStart);
 	    //init local_output
-	    for(i = 0; i<local_output_size/SIMDSIZE; ++i)
+	    for(i = 0; i<(sizeof(TypeD)/sizeof(Type))*local_output_size/SIMDSIZE; ++i)
 		    local_output[i] = 0.0;
 
       for(cKr=0; cKr<K; ++cKr){
@@ -135,39 +145,59 @@ void conv_pad(ConvData* param)
             int lc = cCi - pad;
             if(!(lc >= 0 && lc < Ci))
                 continue;
-            //for back
-			      //dma(dma_get_input, (long)(input_start + (cCi+cRi*Ci)*Ni*B), (long)(local_input));
-			      // dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
-			      //dma_wait(&input_replyget, 1); input_replyget = 0;
+
     			  dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
     			  dma_wait(&input_replyget, 1); input_replyget = 0;
 
-            for(cKc=0; cKc<K; ++cKc){
+            for(i=local_input_size*SIMDSIZE-SIMDSIZE;i>=0;i-=SIMDSIZE){
+              simd_load(vflt,&fptr[i]);
+              vdbl = (SIMDTypeD)vflt;
+              simd_store(vdbl,&dptr[i]);
+            }
 
+            for(cKc=0; cKc<K; ++cKc){
 
               cCo = cCi - cKc;
               if(cCo >= CoStart && cCo < CoEnd){
+			          dma(dma_get_weight, (long)(weight_ptr + (cKc+cKr*K)*Ni*No), (long)(local_weight));
 			          dma_wait(&weight_replyget, 1); weight_replyget = 0;
 
-    			  	  gemm((Type*)(local_input),
-    			  	    (Type*)(local_weight),
-    			  	    (Type*)(local_output + (cCo-CoStart)*No*B/64/SIMDSIZE),
+                for(i=local_weight_size-SIMDSIZE;i>=0;i-=SIMDSIZE){
+                  simd_load(vflt,&wfptr[i]);
+                  vdbl = (SIMDTypeD)vflt;
+                  simd_store(vdbl,&wdptr[i]);
+                }
+
+    			  	  gemm((TypeD*)(local_input),
+    			  	    (TypeD*)(local_weight),
+    			  	    //(TypeD*)(local_output + (cCo-CoStart)*No*B/64/SIMDSIZE),
+    			  	    (TypeD*)(odptr + (cCo-CoStart)*No*B/64),
     			  	    B/8/4,
     			  	    B/8/4,
     			  	    No/8,
     			  	    Ni/8,
     			  	    rid,
     			  	    cid);
+
+
 			        }//if
             }//cKc
           }//cCi
 
       }//cKc
 
+      // convert output type back
+      for(i=0;i<local_output_size;i+=SIMDSIZE){
+        simd_load(vdbl,&odptr[i]);
+        vflt = (SIMDType)vdbl;
+        simd_store(vflt,&ofptr[i]);
+      }
+
       //input back outer
       jj=0;
       for(ii=CoStart; ii<CoEnd; ++ii){
-          dma(dma_put_output, (long)(output_ptr), (long)(local_output+jj*B*No/64/SIMDSIZE));
+          //dma(dma_put_output, (long)(output_ptr), (long)(local_output+jj*B*No/64/SIMDSIZE));
+          dma(dma_put_output, (long)(output_ptr), (long)(ofptr+jj*B*No/64));
           dma_wait(&replyput, 1); replyput = 0;
 		      output_ptr += B*No;
           jj++;
@@ -178,10 +208,10 @@ void conv_pad(ConvData* param)
   }//CoStart
 
   //fjr1buf
-  ldm_free(local_input, sizeof(SIMDType)*local_input_size);
+  ldm_free(local_input, sizeof(SIMDTypeD)*local_input_size);
   //fjr1buf
-  ldm_free(local_weight, sizeof(Type)*local_weight_size);
-  ldm_free(local_output, sizeof(Type)*local_output_size);
+  ldm_free(local_weight, sizeof(TypeD)*local_weight_size);
+  ldm_free(local_output, sizeof(TypeD)*local_output_size);
 
 }//main func
 #undef SIMDType

@@ -149,18 +149,15 @@ void conv_full_pad(ConvData* param)
           if(!(lc >= 0 && lc < Ci))
             continue;
 
-			    //dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
-			    //dma_wait(&input_replyget, 1); input_replyget = 0;
+			    dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
+			    dma_wait(&input_replyget, 1); input_replyget = 0;
 
           for(cKc=0; cKc<K; ++cKc){
 
-			      dma(dma_get_weight, (long)(weight_ptr + (K-1-cKc+(K-1-cKr)*K)*Ni*No), (long)(local_weight));
-			      dma_wait(&weight_replyget, 1); weight_replyget = 0;
-
             cCo = cCi-cKc;
             if(cCo >= CoStart && cCo < CoEnd){
-    		  	  dma(dma_get_input, (long)(input_start + (lc+lr*Ci)*Ni*B), (long)(local_input));
-    		  	  dma_wait(&input_replyget, 1); input_replyget = 0;
+			        dma(dma_get_weight, (long)(weight_ptr + (K-1-cKc+(K-1-cKr)*K)*Ni*No), (long)(local_weight));
+			        dma_wait(&weight_replyget, 1); weight_replyget = 0;
 
 				      gemm(
                 (Type*)(local_input),

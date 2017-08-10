@@ -148,25 +148,24 @@ void conv_valid(ConvData* param)
 				  }
 			  }
 		  }
-            
-          for(cKc=0; cKc<K; ++cKc){
-			if(cKc+1 < K)
-				dma(dma_get_weight, (long)(weight_ptr + (cKc+1+cKr*K)*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
-			else{
-				if(cCi+1 < CiEnd)
-					dma(dma_get_weight, (long)(weight_ptr + (cKr*K)*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
-				else{
-					if(cKr+1 < K)
-						dma(dma_get_weight, (long)(weight_ptr + (cKr+1)*K*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
-					else
-						dma(dma_get_weight, (long)(weight_ptr), (long)(local_weight + weight_load_index*local_weight_size));
+      for(cKc=0; cKc<K; ++cKc){
+			  if(cKc+1 < K)
+			  	dma(dma_get_weight, (long)(weight_ptr + (cKc+1+cKr*K)*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
+			  else{
+			  	if(cCi+1 < CiEnd)
+			  		dma(dma_get_weight, (long)(weight_ptr + (cKr*K)*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
+			  	else{
+			  		if(cKr+1 < K)
+			  			dma(dma_get_weight, (long)(weight_ptr + (cKr+1)*K*Ni*No), (long)(local_weight + weight_load_index*local_weight_size));
+			  		else
+			  			dma(dma_get_weight, (long)(weight_ptr), (long)(local_weight + weight_load_index*local_weight_size));
 				}
 			}
 
       cCo = cCi-cKc;
       if(cCo >= CoStart && cCo < CoEnd){
 
-        gemm((Type*)(local_input  + input_calc_index*local_input_size),
+      gemm((Type*)(local_input  + input_calc_index*local_input_size),
 				(Type*)(local_weight + weight_calc_index*local_weight_size),
 				(Type*)(local_output + (cCo-CoStart)*No*B/64/SIMDSIZE),
 				B/8/4, 
