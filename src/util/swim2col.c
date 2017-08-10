@@ -6,6 +6,8 @@
 
 extern SLAVE_FUN(sw_im2col_large_d)();
 extern SLAVE_FUN(sw_im2col_large_f)();
+extern SLAVE_FUN(sw_col2im_large_d)();
+extern SLAVE_FUN(sw_col2im_large_f)();
 
 typedef struct Im2colPara_st {
   void* data_im;
@@ -54,6 +56,7 @@ void swim2col_f(const float* data_im, const int channels,
   athread_spawn(sw_im2col_large_f,para);
   athread_join();
 
+  free(para);
 }
 
 // double version
@@ -87,4 +90,73 @@ void swim2col_d(const double* data_im, const int channels,
   athread_spawn(sw_im2col_large_d,para);
   athread_join();
 
+  free(para);
+}
+
+// double version
+void swcol2im_f(const float* data_col, const int channels,
+    const int height, const int width, const int kernel_h, const int kernel_w,
+    const int pad_h, const int pad_w,
+    const int stride_h, const int stride_w,
+    const int dilation_h, const int dilation_w,
+    float* data_im) {
+  Im2colPara* para = (Im2colPara*)malloc(sizeof(Im2colPara));
+  para->data_im = data_im;
+  para->data_col= data_col;
+  para->channels= channels;
+  para->height  = height;
+  para->width   = width;
+  para->kernel_h= kernel_h;
+  para->kernel_w= kernel_w;
+  para->pad_h   = pad_h;
+  para->pad_w   = pad_w;
+  para->stride_h= stride_h;
+  para->stride_w= stride_w;
+  para->dilation_h = dilation_h;
+  para->dilation_w = dilation_w;
+  // check parameter Precondition of sw_im2col_large_d
+  assert(stride_h==1);
+  assert(stride_w==1);
+  assert(dilation_h==1);
+  assert(dilation_w==1);
+  assert((width+2*pad_w-kernel_w+1+width)*sizeof(float)<LDM_MAX);
+  // spawn
+  athread_spawn(sw_col2im_large_f,para);
+  athread_join();
+
+  free(para);
+}
+
+// double version
+void swcol2im_d(const double* data_col, const int channels,
+    const int height, const int width, const int kernel_h, const int kernel_w,
+    const int pad_h, const int pad_w,
+    const int stride_h, const int stride_w,
+    const int dilation_h, const int dilation_w,
+    double* data_im) {
+  Im2colPara* para = (Im2colPara*)malloc(sizeof(Im2colPara));
+  para->data_im = data_im;
+  para->data_col= data_col;
+  para->channels= channels;
+  para->height  = height;
+  para->width   = width;
+  para->kernel_h= kernel_h;
+  para->kernel_w= kernel_w;
+  para->pad_h   = pad_h;
+  para->pad_w   = pad_w;
+  para->stride_h= stride_h;
+  para->stride_w= stride_w;
+  para->dilation_h = dilation_h;
+  para->dilation_w = dilation_w;
+  // check parameter Precondition of sw_im2col_large_d
+  assert(stride_h==1);
+  assert(stride_w==1);
+  assert(dilation_h==1);
+  assert(dilation_w==1);
+  assert((width+2*pad_w-kernel_w+1+width)*sizeof(double)<LDM_MAX);
+  // spawn
+  athread_spawn(sw_col2im_large_d,para);
+  athread_join();
+
+  free(para);
 }
