@@ -28,6 +28,7 @@ extern "C" {
 #define IM2COL_TEST_CASE_6 22,128,128,4,4,2,2, "Case 6"
 #define IM2COL_TEST_CASE_7 3 ,224,224,3,3,1,1, "Case 7"
 #define IM2COL_TEST_CASE_8 64,224,224,3,3,1,1, "Case 8"
+#define IM2COL_TEST_CASE_9 22,128,128,2,2,2,2, "Case 9" // 2x2 kernel
 
 void test_im2col_float(int channels, int height, int width, int kernel_h, int kernel_w, int pad_h, int pad_w, const char* case_n) {
 #define Type float
@@ -39,14 +40,18 @@ void test_im2col_float(int channels, int height, int width, int kernel_h, int ke
   output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
   output_w = (width  + 2 * pad_w - (dilation_w * (kernel_w - 1) + 1)) / stride_w + 1;
   Type* data_im = (Type*)malloc(sizeof(Type)*channels*height*width);
-  Type* data_col= (Type*)malloc(sizeof(Type)*output_w*output_h*channels*kernel_h*kernel_w);
-  Type* data_col_ref= (Type*)malloc(sizeof(Type)*output_w*output_h*channels*kernel_h*kernel_w);
+  Type* data_col= (Type*)malloc(sizeof(Type)*output_w*output_h*channels*kernel_h*kernel_w+10*sizeof(Type));
+  Type* data_col_ref= (Type*)malloc(sizeof(Type)*output_w*output_h*channels*kernel_h*kernel_w+10*sizeof(Type));
 
   printf("channels=%d, height=%d, width=%d, kernel_h=%d, kernel_w=%d, pad_h=%d, pad_w=%d, output_w=%d, output_h=%d\n",
           channels,height,width,kernel_h,kernel_w,pad_h,pad_w,output_w,output_h);
   printf("Now creating image data...\n");
   for( int i = 0; i < channels*height*width; ++i )
     data_im[i] = rand()/(Type)RAND_MAX;
+  for(int i = 0; i<output_w*output_h*channels*kernel_h*kernel_w+10;++i) {
+    data_col[i] = 2;
+    data_col_ref[i] = 2;
+  }
 //#define PRINT_DATA
 #ifdef PRINT_DATA
   printf("Created input data(at channel = 0):\n");
@@ -61,7 +66,7 @@ void test_im2col_float(int channels, int height, int width, int kernel_h, int ke
   strcat(str1,case_n);
   begin_timer(str1);
   swim2col_f(data_im,channels,height,width,kernel_h,kernel_w,
-              pad_h,pad_w,stride_h,stride_w,dilation_h,dilation_w,data_col);
+              pad_h,pad_w,stride_h,stride_w,dilation_h,dilation_w,data_col+5);
   stop_timer();
   printf("sw im2col is OK.\n");
 #ifdef PRINT_DATA
@@ -77,7 +82,7 @@ void test_im2col_float(int channels, int height, int width, int kernel_h, int ke
   strcat(str2,case_n);
   begin_timer(str2);
   caffe::im2col_cpu<Type>(data_im,channels,height,width,kernel_h,kernel_w,
-              pad_h,pad_w,stride_h,stride_w,dilation_h,dilation_w,data_col_ref);
+              pad_h,pad_w,stride_h,stride_w,dilation_h,dilation_w,data_col_ref+5);
   stop_timer();
   printf("caffe im2col is OK.\n");
 #ifdef PRINT_DATA
@@ -92,7 +97,7 @@ void test_im2col_float(int channels, int height, int width, int kernel_h, int ke
   Type sum=0.0, sum_ref=0.0;
   int count = 0;
   int t_count = channels*output_w*output_h*kernel_h*kernel_w;
-  for(int i = 0; i < channels*output_w*output_h*kernel_h*kernel_w;++i) {
+  for(int i = 0; i < channels*output_w*output_h*kernel_h*kernel_w+10;++i) {
 
     if(fabs(data_col_ref[i]-data_col[i])>1e-4) {
       count++;
@@ -1795,7 +1800,7 @@ void test_sw_memcpy_float(int count,const char* n) {
 
 int main() {
   athread_init();
-
+/*
   test_col2im_float(IM2COL_TEST_CASE);
   test_col2im_float(IM2COL_TEST_CASE_0);
   test_col2im_float(IM2COL_TEST_CASE_1);
@@ -1806,7 +1811,8 @@ int main() {
   test_col2im_float(IM2COL_TEST_CASE_6);
   test_col2im_float(IM2COL_TEST_CASE_7);
   test_col2im_float(IM2COL_TEST_CASE_8);
-
+  test_col2im_float(IM2COL_TEST_CASE_9);
+*/
 /*
   test_col2im_double(IM2COL_TEST_CASE);
   test_col2im_double(IM2COL_TEST_CASE_0);
@@ -1819,16 +1825,16 @@ int main() {
   test_col2im_double(IM2COL_TEST_CASE_7);
   test_col2im_double(IM2COL_TEST_CASE_8);
   */
-  /*
-  test_im2col_float(IM2COL_TEST_CASE_1);
-  test_im2col_float(IM2COL_TEST_CASE_2);
-  test_im2col_float(IM2COL_TEST_CASE_3);
-  test_im2col_float(IM2COL_TEST_CASE_4);
-  test_im2col_float(IM2COL_TEST_CASE_5);
-  test_im2col_float(IM2COL_TEST_CASE_6);
+
+  //test_im2col_float(IM2COL_TEST_CASE_1);
+  //test_im2col_float(IM2COL_TEST_CASE_2);
+  //test_im2col_float(IM2COL_TEST_CASE_3);
+  //test_im2col_float(IM2COL_TEST_CASE_4);
+  //test_im2col_float(IM2COL_TEST_CASE_5);
+  //test_im2col_float(IM2COL_TEST_CASE_6);
   test_im2col_float(IM2COL_TEST_CASE_7);
   test_im2col_float(IM2COL_TEST_CASE_8);
-  */
+
 /*
   test_im2col_double(IM2COL_TEST_CASE_1);
   test_im2col_double(IM2COL_TEST_CASE_2);
