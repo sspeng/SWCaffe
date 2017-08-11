@@ -18,6 +18,10 @@ SWLIBOBJ+=$(THIRD_PARTY_DIR)/swblas/SWCBLAS/libswblas0324.a
 
 CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
 							../swdnn_test/obj/test_convolution_layer.o\
+							../swdnn_test/obj/test_im2col.o\
+							../swdnn_test/obj/test_memcpy.o\
+							../swdnn_test/obj/test_data_trans.o\
+							../swdnn_test/obj/test_relu.o\
 							../lib/swcaffe.a
 #
 #SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
@@ -41,6 +45,10 @@ CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
 
 
 OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
+							../swdnn_test/obj/test_im2col.o\
+							../swdnn_test/obj/test_memcpy.o\
+							../swdnn_test/obj/test_data_trans.o\
+							../swdnn_test/obj/test_relu.o\
 					 		../swdnn_test/obj/timer.o
 SWDNN_OBJ= 	../lib/sw/swcaffe.a
 
@@ -64,6 +72,14 @@ run: ./bin/swdnn_main
 	mpiicc $(FLAGS) $(INC_FLAGS) -c $^ -o $@
 
 #SW26010
+../swdnn_test/obj/test_im2col.o: ../swdnn_test/src/test_im2col.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_memcpy.o: ../swdnn_test/src/test_memcpy.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_data_trans.o: ../swdnn_test/src/test_data_trans.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_relu.o: ../swdnn_test/src/test_relu.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/timer.o: ../swdnn_test/src/timer.c
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/test_swdnn_main.o: ../swdnn_test/src/test_swdnn_main.cpp 

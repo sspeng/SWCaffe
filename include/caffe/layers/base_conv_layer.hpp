@@ -8,6 +8,10 @@
 //#include "caffe/proto/caffe.pb.h"
 #include "caffe/util/im2col.hpp"
 
+extern "C"
+{
+#include "caffe/util/swim2col.h"
+}
 namespace caffe {
 
 /**
@@ -98,12 +102,41 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   // wrap im2col/col2im so we don't have to remember the (long) argument lists
   inline void conv_im2col_cpu(const Dtype* data, Dtype* col_buff) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+#ifdef USE_SWIM2COL
+//LOG(INFO)<<"forward im2col channels_:"<<conv_in_channels_<<" height: "<<conv_input_shape_.cpu_data()[1]
+//  <<" width: "<<conv_input_shape_.cpu_data()[2]<<" kernel_h:"<<kernel_shape_.cpu_data()[0]
+//  <<" kernel_w: "<<kernel_shape_.cpu_data()[1] << " pad_h: "<<pad_.cpu_data()[0]<<" pad_w:"<<pad_.cpu_data()[1]
+//  <<" stride_h: "<<stride_.cpu_data()[0]<<" stride_w: "<<stride_.cpu_data()[1]
+//  <<" dilation_h: "<<dilation_.cpu_data()[0]<<" dilation_w: "<<dilation_.cpu_data()[1];
+
+      if(sizeof(Dtype) == sizeof(float))
+      {
+        swim2col_f((const float*)data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], (float*)col_buff);
+      }
+      else
+      {
+        swim2col_d((const double*)data, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], (double*)col_buff);
+
+      }
+      //LOG(INFO)<<"forward im2col OK.";
+#else
       im2col_cpu(data, conv_in_channels_,
           conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], col_buff);
+#endif
     } else {
       im2col_nd_cpu(data, num_spatial_axes_, conv_input_shape_.cpu_data(),
           col_buffer_shape_.data(), kernel_shape_.cpu_data(),
@@ -112,12 +145,40 @@ class BaseConvolutionLayer : public Layer<Dtype> {
   }
   inline void conv_col2im_cpu(const Dtype* col_buff, Dtype* data) {
     if (!force_nd_im2col_ && num_spatial_axes_ == 2) {
+#ifdef USE_SWIM2COL
+      if(sizeof(Dtype) == sizeof(float))
+      {
+         swcol2im_f((const float*)col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1],(float*) data);
+        
+      }
+      else
+      {  
+        swcol2im_d((double*)col_buff, conv_in_channels_,
+          conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
+          kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
+          pad_.cpu_data()[0], pad_.cpu_data()[1],
+          stride_.cpu_data()[0], stride_.cpu_data()[1],
+          dilation_.cpu_data()[0], dilation_.cpu_data()[1], (double*)data);
+
+      }
+LOG(INFO)<<"backward col2im channels_:"<<conv_in_channels_<<" height: "<<conv_input_shape_.cpu_data()[1]
+  <<" width: "<<conv_input_shape_.cpu_data()[2]<<" kernel_h:"<<kernel_shape_.cpu_data()[0]
+  <<" kernel_w: "<<kernel_shape_.cpu_data()[1] << " pad_h: "<<pad_.cpu_data()[0]<<" pad_w:"<<pad_.cpu_data()[1]
+  <<" stride_h: "<<stride_.cpu_data()[0]<<" stride_w: "<<stride_.cpu_data()[1]
+  <<" dilation_h: "<<dilation_.cpu_data()[0]<<" dilation_w: "<<dilation_.cpu_data()[1];
+#else
       col2im_cpu(col_buff, conv_in_channels_,
           conv_input_shape_.cpu_data()[1], conv_input_shape_.cpu_data()[2],
           kernel_shape_.cpu_data()[0], kernel_shape_.cpu_data()[1],
           pad_.cpu_data()[0], pad_.cpu_data()[1],
           stride_.cpu_data()[0], stride_.cpu_data()[1],
           dilation_.cpu_data()[0], dilation_.cpu_data()[1], data);
+#endif
     } else {
       col2im_nd_cpu(col_buff, num_spatial_axes_, conv_input_shape_.cpu_data(),
           col_buffer_shape_.data(), kernel_shape_.cpu_data(),

@@ -53,8 +53,10 @@ void swim2col_f(const float* data_im, const int channels,
   assert(dilation_w==1);
   assert((width+2*pad_w)*sizeof(float)<LDM_MAX);
   // spawn
+  //printf("SPAWN sw_im2col_large_f\n");
   athread_spawn(sw_im2col_large_f,para);
   athread_join();
+  //printf("sw_col2im_large_f end\n");
 
   free(para);
 }

@@ -2,6 +2,8 @@
 #include "simd.h"
 #include "dma.h"
 
+//#define PRINT_DEBUGINFO
+
 __thread_local dma_desc dma_get_im, dma_put_col;
 
 typedef struct Im2colPara_st {
@@ -56,7 +58,7 @@ void sw_im2col_large_f(Im2colPara *para) {
 
   int input_row, ir, ic, channel, k;
   int output_row, output_col, outoff, inoff;
-  volatile int input_replyget, replyput;
+  volatile int input_replyget=0, replyput=0;
   // dma settings
   dma_set_op(&dma_get_im, DMA_GET);
   dma_set_mode(&dma_get_im, PE_MODE);
@@ -115,9 +117,15 @@ void sw_im2col_large_f(Im2colPara *para) {
         for(;;);
 #endif
       }
+#ifdef PRINT_DEBUGINFO
+      if(id==0) printf("before dma GET %d\n",input_row);
+#endif
       // get data by dma
       dma(dma_get_im,(long)(input_ptr+input_row*width+inoff),(long)(local_buffer+pad_w));
       dma_wait(&input_replyget, 1); input_replyget = 0;
+#ifdef PRINT_DEBUGINFO
+      if(id==0) printf("dma get end.\n");
+#endif
     }
 
     // put data by dma
@@ -132,10 +140,16 @@ void sw_im2col_large_f(Im2colPara *para) {
         output_col = (input_row-k+pad_h)*output_w;
         if(output_col<0) break; // out of range
         if(output_col>=output_w*output_h) continue; // out of range
+#ifdef PRINT_DEBUGINFO
+        if(id==0) printf("before dma PUT %d %d\n",output_row,output_col);
+#endif
         dma( dma_put_col,
             (long)(output_ptr+output_row*(output_w*output_h)+output_col+outoff),
             (long)(local_buffer_begin));
         dma_wait(&replyput, 1); replyput = 0;
+#ifdef PRINT_DEBUGINFO
+        if(id==0) printf("dma put end.\n");
+#endif
       }
     }
 
@@ -184,7 +198,7 @@ void sw_im2col_large_d(Im2colPara *para) {
 
   int input_row, ir, ic, channel, k;
   int output_row, output_col, outoff, inoff;
-  volatile int input_replyget, replyput;
+  volatile int input_replyget=0, replyput=0;
   // dma settings
   dma_set_op(&dma_get_im, DMA_GET);
   dma_set_mode(&dma_get_im, PE_MODE);
@@ -330,7 +344,7 @@ void sw_col2im_large_f(Im2colPara *para) {
   Type* output_ptr= (Type*)para->data_im;
   int input_row, ir, ic, channel, k;
   int output_row, output_col, outoff, inoff;
-  volatile int input_replyget, replyput;
+  volatile int input_replyget=0, replyput=0;
   // dma settings
   dma_set_op(&dma_get_col, DMA_GET);
   dma_set_mode(&dma_get_col, PE_MODE);
@@ -458,7 +472,7 @@ void sw_col2im_large_d(Im2colPara *para) {
   Type* output_ptr= (Type*)para->data_im;
   int input_row, ir, ic, channel, k;
   int output_row, output_col, outoff, inoff;
-  volatile int input_replyget, replyput;
+  volatile int input_replyget=0, replyput=0;
   // dma settings
   dma_set_op(&dma_get_col, DMA_GET);
   dma_set_mode(&dma_get_col, PE_MODE);
