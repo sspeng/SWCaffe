@@ -11,7 +11,7 @@
 #include <math.h>
 #include "caffe/swlayers/sw_conv_layer_impl.h"
 #include "caffe/util/matrix_trans.h"
-#include "caffe/util/timer.h"
+//#include "caffe/util/timer.h"
 
 
 extern SLAVE_FUN(conv_valid)();

@@ -12,33 +12,23 @@ LDFLAGS += -L../../thirdparty/openblas_install/lib -lopenblas
 
 THIRD_PARTY_DIR=../../thirdparty
 SWINC_FLAGS=-I../include -I./include -I$(THIRD_PARTY_DIR)/CBLAS/include -I${BOOST_DIR}
+SWLIBOBJ=$(THIRD_PARTY_DIR)/swblas/SWCBLAS/lib/cblas_LINUX0324.a
+SWLIBOBJ+=$(THIRD_PARTY_DIR)/swblas/SWCBLAS/libswblas0324.a
 
 
 CAFFE_OBJ = 	../swdnn_test/obj/test_caffe_main.o\
 							../swdnn_test/obj/test_convolution_layer.o\
+							../swdnn_test/obj/test_im2col.o\
+							../swdnn_test/obj/test_memcpy.o\
+							../swdnn_test/obj/test_data_trans.o\
+							../swdnn_test/obj/test_relu.o\
 							../lib/swcaffe.a
-#
-#SWDNN_OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
-#					 		../swdnn_test/obj/timer.o\
-#							../swbuild/swlayers/sw_relu_layer_impl.o\
-#							../swbuild/swlayers/sw_slave_relu.o\
-#							../swbuild/swlayers/sw_conv_layer_impl.o\
-#							../swbuild/swlayers/sw_slave_conv_valid.o\
-#							../swbuild/swlayers/sw_slave_conv_full.o\
-#							../swbuild/swlayers/sw_slave_conv_pad.o\
-#							../swbuild/swlayers/sw_slave_conv_pad_float.o\
-#							../swbuild/swlayers/sw_slave_conv_full_pad.o\
-#							../swbuild/swlayers/sw_slave_conv_full_pad_float.o\
-#							../swbuild/swlayers/gemm_asm.o\
-#							../swbuild/swlayers/gemm_asm_float.o\
-#							../swbuild/util/matrix_trans.o\
-#							../swbuild/util/swmatrix_trans.o\
-#					 		../swbuild/util/data_type_trans.o\
-#					 		../swbuild/util/swdata_type_trans.o\
-#							../swbuild/glog/logging.o
-
 
 OBJ= 		../swdnn_test/obj/test_swdnn_main.o\
+							../swdnn_test/obj/test_im2col.o\
+							../swdnn_test/obj/test_memcpy.o\
+							../swdnn_test/obj/test_data_trans.o\
+							../swdnn_test/obj/test_relu.o\
 					 		../swdnn_test/obj/timer.o
 SWDNN_OBJ= 	../lib/sw/swcaffe.a
 
@@ -49,7 +39,7 @@ run: ./bin/swdnn_main
 	bsub -b -I -q q_sw_expr -host_stack 1024 -n 1 -cgsp 64 -sw3run ../sw3run-all -sw3runarg "-a 1" -cross_size 28000 ./bin/swdnn_main
 ./bin/caffe_main: $(CAFFE_OBJ)
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
-./bin/swdnn_main: $(SWDNN_OBJ) $(OBJ)
+./bin/swdnn_main: $(SWDNN_OBJ) $(OBJ) $(SWLIBOBJ)
 	cd .. && make ar
 	mpiCC -allshare $^ -o $@
 
@@ -62,10 +52,18 @@ run: ./bin/swdnn_main
 	mpiicc $(FLAGS) $(INC_FLAGS) -c $^ -o $@
 
 #SW26010
+../swdnn_test/obj/test_im2col.o: ../swdnn_test/src/test_im2col.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_memcpy.o: ../swdnn_test/src/test_memcpy.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_data_trans.o: ../swdnn_test/src/test_data_trans.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
+../swdnn_test/obj/test_relu.o: ../swdnn_test/src/test_relu.cpp
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/timer.o: ../swdnn_test/src/timer.c
 	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 ../swdnn_test/obj/test_swdnn_main.o: ../swdnn_test/src/test_swdnn_main.cpp 
-	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@ 
+	mpiCC -host $(FLAGS) $(SWINC_FLAGS) -c $^ -o $@
 
 clean:
 	rm ./obj/*

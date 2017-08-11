@@ -24,10 +24,11 @@ SWDNNOBJ=$(patsubst ./src/%, $(SWBUILD_DIR)/%, $(patsubst %.c, %.o, $(swdnnsrc))
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm.o
 SWDNNOBJ+=$(SWBUILD_DIR)/swlayers/gemm_asm_float.o
 SWOBJ+=$(SWDNNOBJ)
-FLAGS += -DUSE_SWDNN
+#FLAGS += -DUSE_SWDNN
 FLAGS += -DSW_TRANS
 FLAGS += -DUSE_SWPOOL
 FLAGS += -DUSE_SWRELU
+FLAGS += -DUSE_SWIM2COL
 
 BIN_DIR=./bin
 lenet: $(BIN_DIR)/test_lenet_sw
@@ -91,6 +92,11 @@ $(SWBUILD_DIR)/util/swmatrix_trans.o: ./src/util/swmatrix_trans.c
 	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 $(SWBUILD_DIR)/util/swmatrix_trans_f.o: ./src/util/swmatrix_trans_f.c
 	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+
+$(SWBUILD_DIR)/util/sw_slave_im2col.o: ./src/util/sw_slave_im2col.c
+	sw5cc.new -slave -msimd -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
+$(SWBUILD_DIR)/util/swim2col.o: ./src/util/swim2col.c
+	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
 
 $(SWBUILD_DIR)/util/matrix_trans.o: ./src/util/matrix_trans.c
 	sw5cc.new -host -c $^ $(FLAGS) $(SWINC_FLAGS) -o $@
