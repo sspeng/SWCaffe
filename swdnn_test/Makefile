@@ -41,7 +41,7 @@ run: ./bin/swdnn_main
 	mpiicc $^ ../../thirdparty/googletest/libgtest.a -o $@ $(LDFLAGS)
 ./bin/swdnn_main: $(SWDNN_OBJ) $(OBJ) $(SWLIBOBJ)
 	cd .. && make ar
-	mpiCC -allshare $^ -o $@
+	mpiCC $^ -o $@
 
 #intel
 ../swdnn_test/obj/test_caffe_main.o: ../swdnn_test/src/test_caffe_main.cpp 

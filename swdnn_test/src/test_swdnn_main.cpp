@@ -1,5 +1,14 @@
 extern "C" {
 #include "caffe/swlayers/sw_conv_layer_impl.h"
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+#include "caffe/swlayers/sw_relu_layer_impl.h"
+#include "caffe/util/data_type_trans.h"
+//#include "caffe/util/sw_memcpy.h"
+=======
+>>>>>>> 7e81df2606b3a44003930c85bd55901c30f79939
+>>>>>>> 509457e5dbb5c0d49941bb0b049dc6bb9fff2a3d
 #include "athread.h"
 }
 #include "caffe/swlayers/conv_layer_impl.hpp"
