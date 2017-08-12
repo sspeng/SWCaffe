@@ -1294,7 +1294,7 @@ void sw_conv_backward_pad_weight_diff_impl_f(
     assert(Costride > 0);
 
     // weight_diff = conv(pad(in), out_grad, 'valid')
-	  athread_spawn(conv_pad_float, param);
+	  athread_spawn(conv_pad_float__, param);
 	  athread_join();
 
 #ifdef MPE_TRANS

@@ -388,8 +388,8 @@ int main (int argc, char ** argv) {
 
   solver_param.set_net_param(net_param);
   DLOG(INFO) << "Init solver...";
-  shared_ptr<Solver<double> >
-      solver(SolverRegistry<double>::CreateSolver(solver_param));
+  shared_ptr<Solver<float> >
+      solver(SolverRegistry<float>::CreateSolver(solver_param));
   DLOG(INFO) << "Begin solve...";
   //solver->net()->CopyTrainedLayersFrom("_iter_700.caffemodel");
   solver->Solve(NULL);
