@@ -238,7 +238,7 @@ void sw_conv_forward_pad_impl_f(
     gettimeofday(&ts, NULL);
 #endif
 	  //athread_spawn(conv_pad_float, param);
-	  athread_spawn(conv_pad_float__, param);
+	  athread_spawn(conv_pad_float, param);
 	  //athread_spawn(conv_pad, param);
 	  athread_join();
 #ifdef DEBUG_VERBOSE_3
