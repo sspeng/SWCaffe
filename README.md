@@ -10,14 +10,13 @@ http://www.netlib.org/blas/
 1. No protocbuf
 2. boost with only hpp headers
 3. No database, such as LMDB, HDF5, etc. for data storage, read from binary file
-4. Support GEMM-swBLAS and swDNN for convlayer
+4. Support GEMM-swBLAS and swDNN for conv_layer
 https://github.com/THUHPGC/swDNN.git
 large image channels, swDNN is used and small channels swBLAS is used
 5. support single-precison floating-point data structure for swDNN
-Because the SW26010 processor dose not double the peak performance with float, we rewrote the asm code used for swDNN
-6. support slave-core accelerated pooling layer
-7. checkout to trans_layer, we add a trans_layer to avoid transformation 4D blobs between orignal caffe format and swDNN format
-8. Suport MPI for multi-node training
+Although SW26010 lack support for some fp instructions used in our asm code and does not double fp performance.
+6. support slave-core accelerated layers
+7. Suport MPI for multi-node training
 
 ### Usage
 Modify Makefile to choose the hardware you want
@@ -49,7 +48,7 @@ http://yann.lecun.com/exdb/mnist/
 2. Not test for swDNN backward convlayer
 
 ### TODO
-1. support multi-threading inside one CPU
+1. support multi-threading inside one processor 
 2. support other data layers
 
 ### Developer
