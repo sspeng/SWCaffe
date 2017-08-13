@@ -48,11 +48,9 @@ http://yann.lecun.com/exdb/mnist/
 1. DataLayer is customized for mnist and imagenet
 2. Not test for swDNN backward convlayer
 
-###TODO
+### TODO
 1. support multi-threading inside one CPU
-2. support other data layer
-3. documents for user
-4. single-precison has bugs
+2. support other data layers
 
 ### Developer
 Jiaui Fang
