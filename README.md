@@ -51,10 +51,8 @@ http://yann.lecun.com/exdb/mnist/
 1. support multi-threading inside one processor 
 2. support other data layers
 
-### Developer
-Jiaui Fang
-Wenlai Zhao
-Liandeng Li
+### Technical Reports
+Ref : https://fangjiarui.github.io/assets/pdf/swcaffe.pdf
 
 ### Contact
 fang_jiarui@163.com
